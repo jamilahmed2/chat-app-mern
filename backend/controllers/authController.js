@@ -104,7 +104,13 @@ export const loginUser = async (req, res) => {
         }
         
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ token, user });
+        // Convert to a plain JavaScript object
+        const userObject = user.toObject();
+        // Remove the password field
+        delete userObject.password;
+        
+        // Send the response with the password-free user object
+        res.status(200).json({ token, user: userObject });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -1,71 +1,91 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
 import Notification from '../models/Notification.js';
 
 const router = express.Router();
 
-// Get all notifications for a user
-// router.get('/', protect, async (req, res) => {
-//     try {
-//         const notifications = await Notification.find({ user: req.user.id }).sort({ createdAt: -1 });
-//         res.json(notifications);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// });
 export const getAllNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.find({ user: req.user.id }).sort({ createdAt: -1 });
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        const notifications = await Notification.find({ user: req.user.id })
+            .populate('sender', 'name profileImage')
+            .sort({ createdAt: -1 });
+
         res.json(notifications);
     } catch (error) {
+        console.error('Get notifications error:', error);
         res.status(500).json({ message: error.message });
     }
-}
-
-// Mark notification as read
-// router.put('/:id/read', protect, async (req, res) => {
-//     try {
-//         const notification = await Notification.findById(req.params.id);
-//         if (!notification) return res.status(404).json({ message: 'Notification not found' });
-
-//         notification.isRead = true;
-//         await notification.save();
-//         res.json({ message: 'Notification marked as read' });
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// });
+};
 
 export const markNotificationAsRead = async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
-        if (!notification) return res.status(404).json({ message: 'Notification not found' });
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
 
-        notification.isRead = true;
-        await notification.save();
-        res.json({ message: 'Notification marked as read' });
+        const notification = await Notification.findOneAndUpdate(
+            { _id: req.params.id, user: req.user.id },
+            { read: true },
+            { new: true }
+        );
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        res.json(notification);
     } catch (error) {
+        console.error('Mark notification as read error:', error);
         res.status(500).json({ message: error.message });
     }
-}
-
-// Delete a notification
-// router.delete('/:id', protect, async (req, res) => {
-//     try {
-//         await Notification.findByIdAndDelete(req.params.id);
-//         res.json({ message: 'Notification deleted' });
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// });
+};
 
 export const deleteNotification = async (req, res) => {
     try {
-        await Notification.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Notification deleted' });
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        // Important: Use findOneAndDelete to ensure we're only deleting user's own notifications
+        const notification = await Notification.findOneAndDelete({
+            _id: req.params.id,
+            user: req.user.id
+        });
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        res.json({ message: 'Notification deleted successfully', id: req.params.id });
     } catch (error) {
+        console.error('Delete notification error:', error);
         res.status(500).json({ message: error.message });
     }
-}
+};
 
-export default router;
+export const deleteAllNotifications = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        // Add proper error handling around the database operation
+        try {
+            const result = await Notification.deleteMany({ user: req.user.id });
+
+            res.json({
+                message: 'All notifications deleted successfully',
+                deletedCount: result.deletedCount
+            });
+        } catch (dbError) {
+            console.error('Database error when deleting notifications:', dbError);
+            res.status(500).json({ message: 'Database error when deleting notifications' });
+        }
+    } catch (error) {
+        console.error('Delete all notifications error:', error);
+        res.status(500).json({ message: error.message || 'Server error when deleting notifications' });
+    }
+};

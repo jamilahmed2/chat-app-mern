@@ -1,25 +1,33 @@
 import express from 'express';
-import { updateProfile, uploadProfileImage } from '../controllers/authController.js';
+import { getAllUsersHome, updatePassword, updateUserEmail, updateUserName, uploadUserProfileImage, userEmailResendOTP, verifyEmailOTP } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import { blockUser, reportUser, unblockUser } from '../controllers/userController.js';
 
+
 const router = express.Router();
 
-// Multer setup for profile image uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, './uploads/profiles');
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
     },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
     }
 });
-const upload = multer({ storage });
+router.get('/get-all-users',   getAllUsersHome);
 
-// User profile management routes
-router.put('/update-profile', protect, updateProfile);
-router.post('/upload-profile-image', protect, upload.single('profileImage'), uploadProfileImage);
+router.put('/update-user-name', protect, updateUserName);
+router.put("/update-user-email", protect, updateUserEmail);
+router.post("/verify-user-email", protect, verifyEmailOTP);
+router.post("/resend-user-email-otp", protect, userEmailResendOTP);
+
+router.put("/update-password", protect, updatePassword);
+router.post('/upload-user-profile-image', protect, upload.single('profileImage'), uploadUserProfileImage);
 
 router.post('/block', protect, blockUser);
 router.post('/unblock', protect, unblockUser);

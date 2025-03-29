@@ -5,8 +5,8 @@ import { protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // Chat routes
-router.post('/send', protect, sendMessage);
 router.get('/:userId', protect, getMessages);
+router.post('/send', protect, sendMessage);
 router.delete('/:messageId', protect, deleteMessage);
 
 export default router;

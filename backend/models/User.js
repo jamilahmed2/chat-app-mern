@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
     profileImage: { type: String, default: '' },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     otp: { type: String },
+    otpExpires: { type: Date },
     isVerified: { type: Boolean, default: false },
     status: { type: String, enum: ['online', 'offline'], default: 'offline' },
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // List of blocked users
@@ -19,17 +20,6 @@ const UserSchema = new mongoose.Schema({
     isBanned: { type: Boolean, default: false },
 }, { timestamps: true });
 
-// // Hash password before saving
-// UserSchema.pre('save', async function (next) {
-//     if (!this.isModified('password')) return next();
-//     this.password = await bcrypt.hash(this.password, 10);
-//     next();
-// });
-
-// // Compare passwords
-// UserSchema.methods.matchPassword = async function (enteredPassword) {
-//     return await bcrypt.compare(enteredPassword, this.password);
-// };
 
 const User = mongoose.model('User', UserSchema);
 export default User;

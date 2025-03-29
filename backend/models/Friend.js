@@ -5,7 +5,7 @@ const friendSchema = new mongoose.Schema({
     recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     status: { 
         type: String, 
-        enum: ['pending', 'accepted'], 
+        enum: ['pending', 'accepted','removed'], 
         default: 'pending' 
     }
 }, { timestamps: true });

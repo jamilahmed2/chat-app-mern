@@ -1,6 +1,24 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getAllUsers, deleteUser, updateAdminName, updateAdminEmail, updateAdminPassword, banUser, getReportedUsers, clearReports, unbanUser, getBannedUsers,verifyEmailOTP, adminEmailResendOTP, uploadAdminProfileImage } from "../api/api";
-import { ADMIN_PASSWORD_UPDATE, ADMIN_GET_ALL_USERS, ADMIN_DELETE_USER, ADMIN_CLEAR_REPORTS, ADMIN_BAN_USER, ADMIN_GET_REPORTED_USERS, ADMIN_UNBAN_USER, ADMIN_GET_BANNED_USERS, ADMIN_NAME_UPDATE, ADMIN_EMAIL_UPDATE, ADMIN_VERIFY_EMAIL_OTP, ADMIN_EMAIL_RESEND_OTP, ADMIN_UPLOAD_PROFILE_IMAGE } from "../actionTypes/actionTypes";
+import { getAllUsers, deleteUser, updateAdminName, updateAdminEmail, updateAdminPassword, banUser, getReportedUsers, clearReports, unbanUser, getBannedUsers, verifyEmailOTP, adminEmailResendOTP, uploadAdminProfileImage, getBlockedUsersInfo, adminUnblockUser, adminGetBlockedUsers, adminGetBlockStatus } from "../api/api.jsx";
+import {
+    ADMIN_GET_ALL_USERS,
+    ADMIN_DELETE_USER,
+    ADMIN_UPLOAD_PROFILE_IMAGE,
+    ADMIN_NAME_UPDATE,
+    ADMIN_EMAIL_UPDATE,
+    ADMIN_VERIFY_EMAIL_OTP,
+    ADMIN_EMAIL_RESEND_OTP,
+    ADMIN_PASSWORD_UPDATE,
+    ADMIN_GET_REPORTED_USERS,
+    ADMIN_BAN_USER,
+    ADMIN_CLEAR_REPORTS,
+    ADMIN_GET_BANNED_USERS,
+    ADMIN_UNBAN_USER,
+    ADMIN_GET_BLOCKED_USERS_INFO,
+    ADMIN_FORCE_UNBLOCK_USER,
+    ADMIN_GET_ALL_BLOCKED_USERS,
+    ADMIN_GET_BLOCK_STATUS
+} from '../actionTypes/actionTypes.jsx';
 
 
 // Get All Users
@@ -129,7 +147,7 @@ export const clearReportsAction = createAsyncThunk(ADMIN_CLEAR_REPORTS, async (u
     return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed to clear reports");
   }
 });
-export const getBannedUsersAction = createAsyncThunk(ADMIN_GET_BANNED_USERS, async (userId, thunkAPI) => {
+export const getBannedUsersAction = createAsyncThunk(ADMIN_GET_BANNED_USERS, async (_, thunkAPI) => {
   try {
     const response = await getBannedUsers(); // ✅ Add await
     return response.data;
@@ -145,4 +163,56 @@ export const unBanUserAction = createAsyncThunk(ADMIN_UNBAN_USER, async (userId,
     return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed to clear reports");
   }
 });
+
+// Get Blocked Users Information
+export const getBlockedUsersInfoAction = createAsyncThunk(
+  ADMIN_GET_BLOCKED_USERS_INFO,
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await getBlockedUsersInfo();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch blocked users info");
+    }
+  }
+);
+
+// Admin Unblock User
+export const adminUnblockUserAction = createAsyncThunk(
+    ADMIN_FORCE_UNBLOCK_USER,
+    async ({ userId, targetUserId }, { rejectWithValue }) => {
+        try {
+            const response = await adminUnblockUser({ userId, targetUserId });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to unblock user");
+        }
+    }
+);
+
+// Admin get blocked users
+export const adminGetBlockedUsersAction = createAsyncThunk(
+    ADMIN_GET_ALL_BLOCKED_USERS,
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await adminGetBlockedUsers();
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to fetch blocked users");
+        }
+    }
+);
+
+// Admin get block status
+export const adminGetBlockStatusAction = createAsyncThunk(
+    ADMIN_GET_BLOCK_STATUS,
+    async ({ userId, targetUserId }, { rejectWithValue }) => {
+        try {
+            const response = await adminGetBlockStatus(userId, targetUserId);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to fetch block status");
+        }
+    }
+);
 

@@ -68,7 +68,7 @@ export const uploadAdminProfileImage = async (req, res) => {
         user.profileImage = result.secure_url;
         await user.save();
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Profile image updated successfully',
             profileImage: result.secure_url
         });
@@ -120,6 +120,11 @@ export const updateAdminEmail = async (req, res) => {
         if (email === admin.email) {
             console.log("New email is the same as the current email");
             return res.status(400).json({ message: "New email is the same as current email" });
+        }
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            console.log("Email is already in use by another user");
+            return res.status(400).json({ message: "Email is already in use" });
         }
 
         const otp = generateOTP();
@@ -313,4 +318,387 @@ export const unbanUser = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+};
+
+
+/**
+ * Get blocked status between two users
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+export const getBlockStatus = async (req, res) => {
+  try {
+    const { userId, targetUserId } = req.params;
+    
+    // Validate input
+    if (!userId || !targetUserId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Both userId and targetUserId are required' 
+      });
+    }
+
+    // Check if users exist
+    const [user, targetUser] = await Promise.all([
+      User.findById(userId),
+      User.findById(targetUserId)
+    ]);
+
+    if (!user || !targetUser) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'One or both users not found' 
+      });
+    }
+
+    // Check if targetUser is in user's blockedUsers array
+    const isBlocked = user.blockedUsers.includes(targetUserId);
+    
+    // Check if user is in targetUser's blockedUsers array
+    const isBlockedBy = targetUser.blockedUsers.includes(userId);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        isBlocked,      // True if user has blocked targetUser
+        isBlockedBy,    // True if targetUser has blocked user
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email
+        },
+        targetUser: {
+          _id: targetUser._id,
+          name: targetUser.name,
+          email: targetUser.email
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error in getBlockStatus:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Unblock a user
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+export const unblockUser = async (req, res) => {
+  try {
+    const { userId, targetUserId } = req.body;
+    
+    // Validate input
+    if (!userId || !targetUserId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both userId and targetUserId are required'
+      });
+    }
+
+    // Find the user who blocked the target
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if the target user is actually blocked
+    if (!user.blockedUsers.includes(targetUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Target user is not blocked'
+      });
+    }
+
+    // Remove targetUserId from blockedUsers array
+    await User.findByIdAndUpdate(userId, {
+      $pull: { blockedUsers: targetUserId }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'User has been unblocked successfully'
+    });
+  } catch (error) {
+    console.error('Error in unblockUser:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all blocked user details for a specific user
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+export const getBlockedUsers = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'UserId is required'
+      });
+    }
+
+    const user = await User.findById(userId)
+      .populate('blockedUsers', 'name email profileImage')
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: user.blockedUsers.length,
+      data: user.blockedUsers
+    });
+  } catch (error) {
+    console.error('Error in getBlockedUsers:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// Get blocked users information
+export const getBlockedUsersInfo = async (req, res) => {
+    try {
+        const users = await User.find({}, { name: 1, email: 1, blockedUsers: 1 });
+        
+        // Filter users who have blocked others
+        const usersWithBlocked = users.filter(user => user.blockedUsers.length > 0);
+        
+        // Get detailed information about blocked users
+        const blockedUsersInfo = await Promise.all(usersWithBlocked.map(async (user) => {
+            const blockedUsersDetails = await User.find(
+                { _id: { $in: user.blockedUsers } },
+                { name: 1, email: 1 }
+            );
+            
+            return {
+                blocker: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email
+                },
+                blockedUsers: blockedUsersDetails
+            };
+        }));
+
+        res.status(200).json({ blockedUsersInfo });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * Admin function to get all blocked users across the system
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+export const adminGetBlockedUsers = async (req, res) => {
+  try {
+    // Check if the requester is an admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required'
+      });
+    }
+
+    // Find all users who have blocked at least one user
+    const usersWithBlockedList = await User.find(
+      { blockedUsers: { $exists: true, $ne: [] } },
+      { name: 1, email: 1, profileImage: 1, blockedUsers: 1 }
+    );
+
+    // Get more information about each blocked user
+    const enhancedData = await Promise.all(
+      usersWithBlockedList.map(async (user) => {
+        const blockedUserDetails = await User.find(
+          { _id: { $in: user.blockedUsers } },
+          { name: 1, email: 1, profileImage: 1 }
+        );
+
+        return {
+          blocker: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            profileImage: user.profileImage
+          },
+          blocked: blockedUserDetails,
+          count: blockedUserDetails.length
+        };
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: enhancedData.length,
+      data: enhancedData
+    });
+  } catch (error) {
+    console.error('Error in adminGetBlockedUsers:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Admin function to unblock a user on behalf of another user
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+export const adminUnblockUser = async (req, res) => {
+  try {
+    // Check if the requester is an admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required'
+      });
+    }
+
+    const { userId, targetUserId } = req.body;
+    
+    // Validate input
+    if (!userId || !targetUserId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both userId and targetUserId are required'
+      });
+    }
+
+    // Find the user who blocked the target
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if the target user is actually blocked
+    if (!user.blockedUsers.includes(targetUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Target user is not blocked'
+      });
+    }
+
+    // Remove targetUserId from blockedUsers array
+    await User.findByIdAndUpdate(userId, {
+      $pull: { blockedUsers: targetUserId }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'User has been unblocked successfully',
+      userId,
+      targetUserId
+    });
+  } catch (error) {
+    console.error('Error in adminUnblockUser:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Admin function to check block status between two users
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+export const adminGetBlockStatus = async (req, res) => {
+  try {
+    // Check if the requester is an admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required'
+      });
+    }
+
+    const { userId, targetUserId } = req.params;
+    
+    // Validate input
+    if (!userId || !targetUserId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Both userId and targetUserId are required' 
+      });
+    }
+
+    // Check if users exist
+    const [user, targetUser] = await Promise.all([
+      User.findById(userId),
+      User.findById(targetUserId)
+    ]);
+
+    if (!user || !targetUser) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'One or both users not found' 
+      });
+    }
+
+    // Check blocking status in both directions
+    const isBlocked = user.blockedUsers.includes(targetUserId);
+    const isBlockedBy = targetUser.blockedUsers.includes(userId);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        isBlocked,      // True if user has blocked targetUser
+        isBlockedBy,    // True if targetUser has blocked user
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          profileImage: user.profileImage
+        },
+        targetUser: {
+          _id: targetUser._id,
+          name: targetUser.name,
+          email: targetUser.email,
+          profileImage: targetUser.profileImage
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error in adminGetBlockStatus:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
 };

@@ -7,7 +7,7 @@ import {
     updateFriendshipStatus 
 } from '../reducers/authSlice';
 
-const FriendsList = () => {
+const FriendRequestList = () => {
     const dispatch = useDispatch();
     const { friendRequests, loading, error } = useSelector((state) => state.auth);
 
@@ -51,76 +51,47 @@ const FriendsList = () => {
         dispatch(declineFriendRequestAction(request._id));
     };
 
+    // if (friendRequests.length === 0 && !loading) {
+    //     return null; // Don't render if there are no requests
+    // }
+
     return (
-        <div style={styles.container}>
-            <h3>Friend Requests</h3>
-            {loading && <p>Loading...</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+        <div className="friend-request-container">
+            <div className="friend-request-header">
+                <h3>Friend Requests</h3>
+                <span className="request-count">{friendRequests.length}</span>
+            </div>
+            
+            {loading && <p className="friend-request-loading">Loading...</p>}
+            {error && <p className="friend-request-error">{error}</p>}
+            
             {friendRequests.length > 0 ? (
-                <ul style={styles.requestList}>
+                <div className="request-list">
                     {friendRequests.map((request) => (
-                        <li key={request._id} style={styles.requestItem}>
-                            {request.requester.name}
-                            <div>
+                        <div key={request._id} className="request-item">
+                            <p className="request-user-name">{request.requester.name}</p>
+                            <div className="request-buttons">
                                 <button 
                                     onClick={() => handleAcceptRequest(request)}
-                                    style={styles.acceptButton}
+                                    className="accept-button"
                                 >
                                     Accept
                                 </button>
                                 <button 
                                     onClick={() => handleDeclineRequest(request)}
-                                    style={styles.declineButton}
+                                    className="decline-button"
                                 >
                                     Decline
                                 </button>
                             </div>
-                        </li>
+                        </div>
                     ))}
-                </ul>
+                </div>
             ) : (
-                <p>No friend requests</p>
+                <p className="no-requests">No friend requests</p>
             )}
         </div>
     );
 };
 
-const styles = {
-    container: {
-        padding: '1rem',
-        backgroundColor: 'grey',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        margin: '1rem'
-    },
-    requestList: {
-        listStyle: 'none',
-        padding: 0
-    },
-    requestItem: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '0.5rem',
-        borderBottom: '1px solid #eee'
-    },
-    acceptButton: {
-        backgroundColor: '#10b981',
-        color: 'white',
-        border: 'none',
-        padding: '0.5rem 1rem',
-        borderRadius: '4px',
-        marginRight: '0.5rem',
-        cursor: 'pointer'
-    },
-    declineButton: {
-        backgroundColor: '#ef4444',
-        color: 'white',
-        border: 'none',
-        padding: '0.5rem 1rem',
-        borderRadius: '4px',
-        cursor: 'pointer'
-    }
-};
-
-export default FriendsList;
+export default FriendRequestList;

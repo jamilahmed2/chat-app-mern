@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
     loginUser,
     logoutUserAction,
@@ -21,7 +21,11 @@ import {
     getBannedUsersAction,
     unBanUserAction,
     adminEmailResendOTPAction,
-    uploadAdminProfileImageAction
+    uploadAdminProfileImageAction,
+    getBlockedUsersInfoAction,
+    adminUnblockUserAction,
+    adminGetBlockedUsersAction,
+    adminGetBlockStatusAction
 } from '../actions/adminActions.jsx'
 import {
     updateUserPasswordAction,
@@ -30,7 +34,11 @@ import {
     updateUserEmailAction,
     userEmailOTPAction,
     uploadProfileImageAction,
-    getAllUsersHomeAction
+    getAllUsersHomeAction,
+    blockUserAction,
+    unblockUserAction,
+    reportUserAction,
+    getUserAction
 } from '../actions/userActions.jsx'
 import {
     acceptFriendRequestAction,
@@ -48,13 +56,14 @@ const initialState = {
     totalUsers: [],
     reportedUsers: [],
     bannedUsers: [],
+    blockedUsersInfo: [],
     friends: [],
     friendRequests: [],
     otpVerified: false,
     tempEmail: null,
     passwordResetEmailSent: false,
     error: null,
-
+    successMessage: null,
 };
 
 const authSlice = createSlice({
@@ -69,7 +78,7 @@ const authSlice = createSlice({
         },
         setTempEmail: (state, action) => {
             state.tempEmail = action.payload;
-        }, 
+        },
         updateFriendRequests: (state, action) => {
             state.friendRequests = action.payload;
         },
@@ -99,6 +108,9 @@ const authSlice = createSlice({
                 });
             }
         },
+        getUser: (state, action) => {
+            state.user = action.payload;
+        },
         logout: (state) => {
             state.user = null;
             state.totalUsers = [];
@@ -108,6 +120,12 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             localStorage.removeItem("user");
         },
+        clearError: (state) => {
+            state.error = null;
+        },
+        clearSuccess: (state) => {
+            state.successMessage = null;
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -219,6 +237,7 @@ const authSlice = createSlice({
             })
             .addCase(getAllUsersHomeAction.fulfilled, (state, action) => {
                 state.isLoading = false;
+                
                 state.totalUsers = Array.isArray(action.payload.users) ? action.payload.users : [];
             })
             .addCase(getAllUsersHomeAction.rejected, (state, action) => {
@@ -457,7 +476,19 @@ const authSlice = createSlice({
                 state.error = action.payload;
             })
 
-
+            // Get User
+            .addCase(getUserAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(getUserAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.user = action.payload;
+            })
+            .addCase(getUserAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
 
             // User Profile image
             .addCase(uploadProfileImageAction.pending, (state) => {
@@ -694,6 +725,161 @@ const authSlice = createSlice({
                 state.error = action.payload;
             })
 
+            // Block User
+            .addCase(blockUserAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(blockUserAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+                if (state.user) {
+                    state.user.blockedUsers = [...(state.user.blockedUsers || []), action.payload.userId];
+                }
+                // Update blocked status in the totalUsers list
+                state.totalUsers = state.totalUsers.map(user => {
+                    if (user._id === action.payload.userId) {
+                        return {
+                            ...user,
+                            isBlocked: true
+                        };
+                    }
+                    return user;
+                });
+            })
+            .addCase(blockUserAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            // Unblock User
+            .addCase(unblockUserAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(unblockUserAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+                if (state.user) {
+                    state.user.blockedUsers = state.user.blockedUsers.filter(
+                        id => id !== action.payload.userId
+                    );
+                }
+                // Update blocked status in the totalUsers list
+                state.totalUsers = state.totalUsers.map(user => {
+                    if (user._id === action.payload.userId) {
+                        return {
+                            ...user,
+                            isBlocked: false
+                        };
+                    }
+                    return user;
+                });
+            })
+            .addCase(unblockUserAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            // Report User
+            .addCase(reportUserAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(reportUserAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+                // Optional: Update UI to indicate the user has been reported
+                state.totalUsers = state.totalUsers.map(user => {
+                    if (user._id === action.payload.userId) {
+                        return {
+                            ...user,
+                            isReported: true
+                        };
+                    }
+                    return user;
+                });
+            })
+            
+            .addCase(reportUserAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            // Get Blocked Users Info
+            .addCase(getBlockedUsersInfoAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(getBlockedUsersInfoAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.blockedUsersInfo = action.payload.blockedUsersInfo || [];
+            })
+            .addCase(getBlockedUsersInfoAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            // Admin Unblock User
+            .addCase(adminUnblockUserAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(adminUnblockUserAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+
+                // Find the blocker in blockedUsersInfo
+                const { userId, targetUserId } = action.payload;
+
+                state.blockedUsersInfo = state.blockedUsersInfo.map(blockInfo => {
+                    if (blockInfo.blocker.id === userId) {
+                        return {
+                            ...blockInfo,
+                            blockedUsers: blockInfo.blockedUsers.filter(
+                                user => user._id !== targetUserId
+                            )
+                        };
+                    }
+                    return blockInfo;
+                });
+
+                // Remove any entries with empty blockedUsers array
+                state.blockedUsersInfo = state.blockedUsersInfo.filter(
+                    blockInfo => blockInfo.blockedUsers.length > 0
+                );
+            })
+            .addCase(adminUnblockUserAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            // Admin Get Blocked Users
+            .addCase(adminGetBlockedUsersAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(adminGetBlockedUsersAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.allBlockedUsers = action.payload.data;
+                state.error = null;
+            })
+            .addCase(adminGetBlockedUsersAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            // Admin Get Block Status
+            .addCase(adminGetBlockStatusAction.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(adminGetBlockStatusAction.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.blockStatus = action.payload.data;
+                state.error = null;
+            })
+            .addCase(adminGetBlockStatusAction.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
     },
 });
 export {
@@ -729,7 +915,23 @@ export {
     removeFriendAction,
     sendFriendRequestAction,
     declineFriendRequestAction,
-    logoutUserAction
+    logoutUserAction,
+    getBlockedUsersInfoAction,
+    adminUnblockUserAction,
+    adminGetBlockedUsersAction,
+    adminGetBlockStatusAction, 
+    blockUserAction, 
+    unblockUserAction,
+    reportUserAction,
+    getUserAction
 };
-export const { logout, setTempEmail, updateFriendshipStatus,updateFriendRequests } = authSlice.actions;
+export const { logout, setTempEmail, updateFriendshipStatus, updateFriendRequests } = authSlice.actions;
 export default authSlice.reducer;
+
+// Add a new action to clear the error message
+export const clearAuthError = createAsyncThunk(
+    'auth/clearAuthError',
+    async (_, thunkAPI) => {
+        return;
+    }
+);

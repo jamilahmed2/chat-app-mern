@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers, deleteUser, updateAdminPassword, getReportedUsers, clearReports, banUser, unbanUser, getBannedUsers, updateAdminEmail, updateAdminName, verifyEmailOTP, adminEmailResendOTP, uploadAdminProfileImage } from '../controllers/adminController.js';
+import { getAllUsers, deleteUser, updateAdminPassword, getReportedUsers, clearReports, banUser, unbanUser, getBannedUsers, updateAdminEmail, updateAdminName, verifyEmailOTP, adminEmailResendOTP, uploadAdminProfileImage, getBlockedUsersInfo, adminGetBlockedUsers, adminUnblockUser, adminGetBlockStatus } from '../controllers/adminController.js';
 import { protect, adminOnly } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 const router = express.Router();
@@ -33,5 +33,11 @@ router.get('/reported-users', protect, adminOnly, getReportedUsers);
 router.put('/clear-reports/:userId', protect, adminOnly, clearReports);
 router.put('/ban/:userId', protect, adminOnly, banUser);
 router.put('/unban/:userId', protect, adminOnly, unbanUser);
+router.get('/blocked-users', protect, adminOnly, getBlockedUsersInfo);
+
+// Blocked users admin routes
+router.get('/admin-blocked-users', protect, adminOnly, adminGetBlockedUsers);
+router.post('/admin-unblock-user', protect, adminOnly, adminUnblockUser);
+router.get('/admin-block-status/:userId/:targetUserId', protect, adminOnly, adminGetBlockStatus);
 
 export default router;

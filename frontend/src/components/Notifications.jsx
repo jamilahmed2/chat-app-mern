@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getNotificationsAction, markNotificationAsReadAction, deleteNotificationAction, deleteAllNotificationsAction } from '../reducers/notificationSlice';
+import { IoNotificationsOutline } from 'react-icons/io5';
+import { IoClose } from 'react-icons/io5';
 
 const Notifications = () => {
     const dispatch = useDispatch();
@@ -25,147 +27,74 @@ const Notifications = () => {
         setIsOpen(false); // Close dropdown after clearing
     };
 
+    const unreadCount = notifications.filter(n => !n.read).length;
+
     return (
-        <div style={styles.container}>
+        <div className="notification-container">
             <button
-                style={styles.notificationButton}
+                className="notification-bell"
                 onClick={() => setIsOpen(!isOpen)}
+                aria-label="Notifications"
             >
-                🔔
-                {notifications.filter(n => !n.read).length > 0 && (
-                    <span style={styles.badge}>
-                        {notifications.filter(n => !n.read).length}
+                <IoNotificationsOutline />
+                {unreadCount > 0 && (
+                    <span className="notification-badge">
+                        {unreadCount}
                     </span>
                 )}
             </button>
 
             {isOpen && (
-                <div style={styles.dropdown}>
-                    <div style={styles.clearAllContainer}>
+                <div className="notification-dropdown">
+                    <div className="notification-header">
+                        <h3>Notifications</h3>
                         <button
                             onClick={handleClearAll}
-                            style={styles.clearAllButton}
+                            className="clear-all-button"
+                            disabled={notifications.length === 0}
                         >
                             Clear All
                         </button>
                     </div>
-                    {loading ? (
-                        <p>Loading notifications...</p>
-
-                    ) : notifications.length > 0 ? (
-
-                        notifications.map((notification) => (
-
-                            <div
-                                key={notification._id}
-                                style={{
-                                    ...styles.notification,
-                                    backgroundColor: notification.read ? '#f3f4f6' : '#808080'
-                                }}
-                                onClick={() => handleNotificationClick(notification._id)}
-                            >
-                                <div style={styles.notificationContent}>
-                                    <p style={styles.message}>{notification.message}</p>
-                                    <small style={styles.time}>
-                                        {new Date(notification.createdAt).toLocaleDateString()}
-                                    </small>
-                                </div>
-                                <button
-                                    onClick={(e) => handleDeleteNotification(e, notification._id)}
-                                    style={styles.deleteButton}
+                    
+                    <div className="notification-list">
+                        {loading ? (
+                            <p className="notification-loading">Loading notifications...</p>
+                        ) : notifications.length > 0 ? (
+                            notifications.map((notification) => (
+                                <div
+                                    key={notification._id}
+                                    className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                                    onClick={() => handleNotificationClick(notification._id)}
                                 >
-                                    ×
-                                </button>
-
-                            </div>
-                        ))
-                    ) : (
-                        <p style={styles.noNotifications}>No notifications</p>
-                    )}
+                                    <div className="notification-content">
+                                        <p className="notification-message">{notification.message}</p>
+                                        <span className="notification-time">
+                                            {new Date(notification.createdAt).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={(e) => handleDeleteNotification(e, notification._id)}
+                                        className="notification-delete-button"
+                                        aria-label="Delete notification"
+                                    >
+                                        <IoClose />
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="no-notifications">No notifications</p>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
     );
-};
-
-const styles = {
-    container: {
-        position: 'relative',
-        display: 'inline-block',
-    },
-    notificationButton: {
-        background: 'none',
-        border: 'none',
-        fontSize: '24px',
-        cursor: 'pointer',
-        position: 'relative'
-    },
-    badge: {
-        position: 'absolute',
-        top: '-5px',
-        right: '-5px',
-        backgroundColor: '#ef4444',
-        color: 'white',
-        borderRadius: '50%',
-        padding: '2px 6px',
-        fontSize: '12px'
-    },
-    dropdown: {
-        position: 'absolute',
-        right: 0,
-        top: '100%',
-        width: '300px',
-        maxHeight: '400px',
-        overflowY: 'auto',
-        backgroundColor: 'white',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        borderRadius: '8px',
-        zIndex: 1000
-    },
-    notification: {
-        padding: '12px',
-        backgroundColor: 'grey',
-        borderBottom: '1px solid grey',
-        cursor: 'pointer'
-    },
-    message: {
-        margin: '0 0 4px 0'
-    },
-    time: {
-        color: 'black'
-    },
-    notificationContent: {
-        flex: 1
-    },
-    deleteButton: {
-        background: 'none',
-        border: 'none',
-        color: '#6b7280',
-        fontSize: '18px',
-        cursor: 'pointer',
-        padding: '4px 8px',
-        marginLeft: '8px'
-    },
-    clearAllContainer: {
-        padding: '8px',
-        borderBottom: '1px solid rgb(50, 96, 188)',
-        backgroundColor: 'rgb(50, 96, 188)',
-        textAlign: 'right'
-    },
-    clearAllButton: {
-        background: '#ef4444',
-        color: 'white',
-        border: 'none',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '12px'
-    },
-    noNotifications: {
-        padding: '12px',
-        textAlign: 'center',
-        color: '#6b7280'
-    }
 };
 
 export default Notifications;

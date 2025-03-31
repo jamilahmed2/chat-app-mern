@@ -24,6 +24,7 @@ export const logout = () => API.post('/auth/logout', {});
 
 
 // User API Calls
+export const getUser = (id) => API.get(`/users/get-user/${id}`);
 export const getAllUsersHome = () => API.get("/users/get-all-users");
 export const updateUserProfile = (userData) => API.put("/users/update-profile", userData);
 export const updatePassword = (passwordData) => API.put("/users/update-password", passwordData);
@@ -32,6 +33,9 @@ export const updateUserEmail = (email) => API.put("/users/update-user-email", em
 export const userEmailResendOTP = (email) => API.post("/users/resend-user-email-otp", { email });
 export const verifyUserEmailOTP = (verificationData) => API.post("/users/verify-user-email", verificationData);
 export const uploadUserProfileImage = (formData) => API.post('/users/upload-user-profile-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const blockUser = (userId) => API.post('/users/block', { userId });
+export const unblockUser = (userId) => API.post('/users/unblock', { userId });
+export const reportUser = (data) => API.post('/users/report', data);
 
 
 // Admin API Calls
@@ -49,6 +53,7 @@ export const updateAdminName = (nameData) => API.put("/admin/update-name", nameD
 export const updateAdminEmail = (email) => API.put("/admin/update-email", email);
 export const verifyEmailOTP = (verificationData) => API.post("/admin/verify-email", verificationData);
 export const updateAdminPassword = (passwordData) => API.put("/admin/updateAdminPassword", passwordData);
+export const getBlockedUsersInfo = () => API.get("/admin/blocked-users");
 
 
 // friend api call
@@ -58,7 +63,7 @@ export const declineFriendRequest = (data) => API.post("/friends/decline", data)
 export const getFriendReuests = () => API.get("/friends/requests");
 export const getFriends = () => API.get("/friends/list");
 export const removeFriend = (data) => API.post("/friends/remove", data);
-
+// notification api call
 export const getNotifications = () => API.get("/notifications");
 export const markNotificationAsRead = () => API.put(`/notifications/${notificationId}/read`);
 export const deleteNotification = (notificationId) => API.delete(`/notifications/${notificationId}`);
@@ -66,6 +71,30 @@ export const deleteAllNotifications = () => API.delete('/notifications/all');
 
 // Message
 export const getMessages = (userId) => API.get(`/chats/${userId}`);
-export const sendMessage = (data) => API.post('/chats/send', data);
+// export const sendMessage = (data) => API.post('/chats/send', data);
 export const deleteMessage = (messageId) => API.delete(`/chats/${messageId}`);
+export const sendMessage = (data) => {
+  if (data instanceof FormData) {
+    return API.post('/chats/send', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  } else {
+    return API.post('/chats/send', data);
+  }
+};
+export const markMessagesAsDelivered = (senderId) =>
+  API.put(`/chats/delivered/${senderId}`);
+export const markMessagesAsRead = (senderId) => API.put(`/chats/read/${senderId}`);
+export const getUnreadMessageCounts = () => API.get('/chats/unread-counts');
+
+export const addReaction = (messageId, emoji) => 
+  API.post(`/chats/${messageId}/reactions`, { emoji });
+
+export const removeReaction = (messageId) => 
+  API.delete(`/chats/${messageId}/reactions`);
+// Admin blocked users endpoints
+export const adminGetBlockedUsers = () => API.get("/admin/admin-blocked-users");
+export const adminGetBlockStatus = (userId, targetUserId) => API.get(`/admin/admin-block-status/${userId}/${targetUserId}`);
+export const adminUnblockUser = (data) => API.post("/admin/admin-unblock-user", data);
+
 export default API;

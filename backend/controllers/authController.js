@@ -54,6 +54,7 @@ export const verifyOTP = async (req, res) => {
         user.isVerified = true;
         user.otp = null;
         user.otpExpires = null;
+        user.status= 'online'
         await user.save();
 
         // ✅ Generate a JWT token (so user gets logged in automatically after verification)

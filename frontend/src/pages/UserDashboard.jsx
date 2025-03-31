@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from 'react-router-dom'
-import {  updateUserEmailAction, updateUserNameAction, updateUserPasswordAction, setTempEmail, uploadProfileImageAction, logoutUserAction, getAllUsersHomeAction } from "../reducers/authSlice.jsx";
+import { useNavigate, Link } from 'react-router-dom';
+import { updateUserEmailAction, updateUserNameAction, updateUserPasswordAction, setTempEmail, uploadProfileImageAction, logoutUserAction, getAllUsersHomeAction } from "../reducers/authSlice";
+import socket from "../utils/socket";
+import AlertNotification from "../components/AlertNotification";
 
 const UserDashboard = () => {
     const { user, loading, error } = useSelector((state) => state.auth);
@@ -14,6 +16,8 @@ const UserDashboard = () => {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [message, setMessage] = useState("");
+    const [activeTab, setActiveTab] = useState("profile"); // Default tab
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     useEffect(() => {
         return () => {
@@ -22,6 +26,18 @@ const UserDashboard = () => {
             }
         };
     }, [preview]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (!event.target.closest(".profile-dropdown-container")) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
 
     // profile image
     const handleFileChange = (e) => {
@@ -66,263 +82,237 @@ const UserDashboard = () => {
 
             if (result.meta.requestStatus === "fulfilled") {
                 setMessage("Profile image updated successfully");
+                setTimeout(() => setMessage(""), 3000);
                 setSelectedFile(null);
                 setPreview(null);
             }
         } catch (error) {
             console.error("Upload error:", error);
             setMessage("Error uploading image");
+            setTimeout(() => setMessage(""), 3000);
         }
     };
 
     const handleUpdateName = async (e) => {
         e.preventDefault();
-        dispatch(updateUserNameAction({ name }));
+        dispatch(updateUserNameAction({ name })).then((res) => {
+            if (res.meta.requestStatus === "fulfilled") {
+                setMessage("Name updated successfully");
+                setTimeout(() => setMessage(""), 3000);
+            }
+        });
     };
 
     const handleUpdateEmail = async (e) => {
         e.preventDefault();
-        // console.log("Updating email for:", email);
-
-        // Fix: Pass email as an object
         dispatch(updateUserEmailAction({ email })).then((res) => {
-            // console.log("Response from updateAdminEmailAction:", res);
             if (res.meta.requestStatus === "fulfilled") {
-                dispatch(setTempEmail(email))
+                dispatch(setTempEmail(email));
                 navigate("/verify-email");
             }
         });
     };
+
     // Handle password change
     const handlePasswordChange = (e) => {
         e.preventDefault();
         dispatch(updateUserPasswordAction({ currentPassword, newPassword })).then((res) => {
             if (res.meta.requestStatus === "fulfilled") {
                 setMessage("Password updated successfully");
+                setTimeout(() => setMessage(""), 3000);
                 setCurrentPassword("");
                 setNewPassword("");
             }
         });
     };
 
+    const navigateToChat = () => {
+        navigate('/chats');
+    };
+
     // Handle logout
       const handleLogout = () => {
+        // Disconnect socket before logout
+        if (socket && socket.connected) {
+            socket.disconnect();
+            console.log("Socket disconnected during logout");
+        }
+        
             dispatch(logoutUserAction()).then(() => {
-                dispatch(getAllUsersHomeAction())
                 navigate('/');
             });
         };
 
     return (
-        <div style={styles.container}>
-            <h2 style={styles.title}>User Profile</h2>
-            {user && (
-                <div style={{ marginBottom: '20px', color: 'white' }}>
-                    <p>Name: <strong>{user.name}</strong> </p>
-                    <p>Email: {user.email}</p>
-                </div>
-            )}            {loading && <p>Loading...</p>}
-            {error && <p style={styles.error}>{error}</p>}
-            {message && <p style={styles.success}>{message}</p>}
+        <div className="dashboard-container">
+            {/* Notification */}
+            {message && <AlertNotification message={message} type="success" />}
+            {error && <AlertNotification message={error} type="error" />}
 
-            <div style={styles.imageUploadSection}>
-                {user?.profileImage && (
+            {/* Main Layout */}
+            <div className="dashboard-layout">
+                {/* Sidebar */}
+                <aside className="dashboard-sidebar">
+                    <div className="sidebar-header">
+                        <h2><i className="ri-user-line"></i> User Dashboard</h2>
+                    </div>
+                    <ul className="sidebar-menu">
+                        <li className={activeTab === "profile" ? "active" : ""}>
+                            <button onClick={() => setActiveTab("profile")}>
+                                <i className="ri-user-settings-line"></i> Profile Settings
+                            </button>
+                        </li>
+                        <li className={activeTab === "security" ? "active" : ""}>
+                            <button onClick={() => setActiveTab("security")}>
+                                <i className="ri-lock-password-line"></i> Security
+                            </button>
+                        </li>
+                        <li>
+                            <button onClick={navigateToChat}>
+                                <i className="ri-chat-3-line"></i> Chat
+                            </button>
+                        </li>
+                        <li className="profile-dropdown-container">
+                            <button 
+                                className="profile-button"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            >
+                                <img 
+                                    src={user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
+                                    alt="" 
+                                />
+                            </button>
+                            {isDropdownOpen && (
+                                <ul className="profile-dropdown">
+                                    <li><button onClick={() => setActiveTab("profile")}><i className="ri-user-line"></i> Profile</button></li>
+                                    <li><button onClick={handleLogout}><i className="ri-logout-box-line"></i> Logout</button></li>
+                                </ul>
+                            )}
+                        </li>
+                    </ul>
+                </aside>
+
+                {/* Content Area */}
+                <main className="dashboard-content">
+                    {activeTab === "profile" && (
+                        <div className="content-card">
+                            <div className="card-header">
+                                <h2>Profile Information</h2>
+                                <p>Update your personal information</p>
+                </div>
+
+                            <div className="profile-section">
+                                <div className="profile-info">
+                                    <div className="profile-avatar">
                     <img
-                        src={user.profileImage}
-                        alt="Current Profile"
-                        style={styles.profileImage}
+                                            src={preview || user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
+                                            alt="Profile" 
                     />
-                )}
+                                        <div className="upload-overlay">
+                                            <label htmlFor="profile-upload">
+                                                <i className="ri-camera-line"></i>
+                                            </label>
                 <input
+                                                id="profile-upload" 
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    style={styles.fileInput}
-                />
-                {preview && (
-                    <img
-                        src={preview}
-                        alt="Preview"
-                        style={styles.previewImage}
-                    />
-                )}
+                                                style={{display: 'none'}}
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {selectedFile && (
                 <button
                     onClick={handleUpload}
-                    style={{
-                        ...styles.uploadButton,
-                        ...(loading ? styles.buttonDisabled : {})
-                    }}
-                    disabled={!selectedFile || loading}
-                >
-                    {loading ? (
-                        <span>Uploading...</span>
-                    ) : (
-                        "Upload Image"
-                    )}
-                </button>
+                                            className="upload-button"
+                                            disabled={loading}
+                                        >
+                                            {loading ? "Uploading..." : "Upload Image"}
+                                        </button>
+                                    )}
+                                    
+                                    <div className="user-details">
+                                        <h3>{user?.name}</h3>
+                                        <p>{user?.email}</p>
+                                    </div>
             </div>
 
-            {/* Update Name & Email Form */}
-            <form onSubmit={handleUpdateName}>
-                <label>Name:</label>
+                                <div className="profile-forms">
+                                    <form onSubmit={handleUpdateName} className="update-form">
+                                        <div className="form-group">
+                                            <label>Name</label>
                 <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                                                placeholder="Update your name"
+                                                required
                 />
+                                        </div>
                 <button type="submit" disabled={loading}>
                     {loading ? "Updating..." : "Update Name"}
                 </button>
             </form>
 
-            <form onSubmit={handleUpdateEmail}>
-                <label>Email:</label>
+                                    <form onSubmit={handleUpdateEmail} className="update-form">
+                                        <div className="form-group">
+                                            <label>Email</label>
                 <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="Update your email"
+                                                required
                 />
+                                        </div>
                 <button type="submit" disabled={loading}>
                     {loading ? "Updating..." : "Update Email"}
                 </button>
             </form>
-
-            {/* Password Change Form */}
-            <h3 style={styles.subtitle}>Change Password</h3>
-            <form onSubmit={handlePasswordChange} style={styles.form}>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {activeTab === "security" && (
+                        <div className="content-card">
+                            <div className="card-header">
+                                <h2>Security Settings</h2>
+                                <p>Update your password</p>
+                            </div>
+                            
+                            <form onSubmit={handlePasswordChange} className="password-form">
+                                <div className="form-group">
+                                    <label>Current Password</label>
                 <input
                     type="password"
-                    placeholder="Current Password"
-                    style={styles.input}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
+                                        placeholder="Enter current password"
                     required
                 />
+                                </div>
+                                <div className="form-group">
+                                    <label>New Password</label>
                 <input
                     type="password"
-                    placeholder="New Password"
-                    style={styles.input}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="Enter new password"
                     required
                 />
-                <button type="submit" style={styles.updateButton} disabled={loading}>
-                    {loading ? "Changing..." : "Change Password"}
+                                </div>
+                                <button type="submit" disabled={loading}>
+                                    {loading ? "Updating..." : "Change Password"}
                 </button>
             </form>
-
-            {/* Logout Button */}
-            <button onClick={handleLogout} style={styles.logoutButton}>
-                Logout
-            </button>
+                        </div>
+                    )}
+                </main>
+            </div>
         </div>
     );
-};
-
-// Styles Object
-const styles = {
-    container: {
-        maxWidth: "400px",
-        margin: "40px auto",
-        padding: "24px",
-        backgroundColor: "#2d3748",
-        color: "#f9fafb",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        borderRadius: "8px",
-        textAlign: "center",
-    },
-    title: {
-        fontSize: "24px",
-        fontWeight: "bold",
-        marginBottom: "16px",
-    },
-    subtitle: {
-        fontSize: "20px",
-        fontWeight: "bold",
-        marginTop: "24px",
-    },
-    form: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        marginTop: "16px",
-    },
-    input: {
-        width: "100%",
-        padding: "8px",
-        borderRadius: "5px",
-        border: "1px solid #ccc",
-        marginBottom: "8px",
-    },
-    updateButton: {
-        width: "100%",
-        padding: "10px",
-        backgroundColor: "#3b82f6",
-        color: "white",
-        border: "none",
-        borderRadius: "4px",
-        cursor: "pointer",
-    },
-    imageUploadSection: {
-        marginBottom: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '10px'
-    },
-    profileImage: {
-        width: '100px',
-        height: '100px',
-        borderRadius: '50%',
-        objectFit: 'cover',
-        marginBottom: '10px'
-    },
-    previewImage: {
-        width: '100px',
-        height: '100px',
-        borderRadius: '50%',
-        objectFit: 'cover'
-    },
-    fileInput: {
-        width: '100%',
-        padding: '8px',
-        backgroundColor: '#4a5568',
-        borderRadius: '4px',
-        color: 'white'
-    },
-    uploadButton: {
-        width: '100%',
-        padding: '8px',
-        backgroundColor: '#48bb78',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        marginTop: '8px'
-    },
-    buttonDisabled: {
-        backgroundColor: '#9CA3AF',
-        cursor: 'not-allowed',
-        opacity: 0.7
-    },
-    logoutButton: {
-        width: "100%",
-        padding: "10px",
-        backgroundColor: "#ef4444",
-        color: "white",
-        border: "none",
-        borderRadius: "4px",
-        cursor: "pointer",
-        marginTop: "16px",
-    },
-    error: {
-        color: "red",
-        marginTop: "10px",
-    },
-    success: {
-        color: "green",
-        marginTop: "10px",
-    },
 };
 
 export default UserDashboard;

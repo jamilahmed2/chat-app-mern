@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsersHome, updatePassword, updateUserEmail, updateUserName, uploadUserProfileImage, userEmailResendOTP, verifyEmailOTP } from '../controllers/userController.js';
+import { getAllUsersHome, getUser, updatePassword, updateUserEmail, updateUserName, uploadUserProfileImage, userEmailResendOTP, verifyEmailOTP } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import { blockUser, reportUser, unblockUser } from '../controllers/userController.js';
@@ -20,7 +20,7 @@ const upload = multer({
     }
 });
 router.get('/get-all-users',   getAllUsersHome);
-
+router.get('/get-user/:id', getUser);
 router.put('/update-user-name', protect, updateUserName);
 router.put("/update-user-email", protect, updateUserEmail);
 router.post("/verify-user-email", protect, verifyEmailOTP);

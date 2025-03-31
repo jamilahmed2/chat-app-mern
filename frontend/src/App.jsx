@@ -14,28 +14,42 @@ import socket from './utils/socket';
 import { useEffect } from 'react'
 import { addNotification } from './reducers/notificationSlice'
 import ChatPage from './pages/Chat'
-
+import AlertNotification from './components/AlertNotification'
+import UserProfile from './components/UserProfile'
+import ProtectedRoute from './components/ProtectedRoute'
 function App() {
+  const dispatch = useDispatch();
+  const { user, error, successMessage } = useSelector((state) => state.auth);
 
-  const dispatch =useDispatch();
-  const { user } = useSelector((state) => state.auth);
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
+    // Only setup socket for authenticated users
+    if (user && user.token) {
+      // Setup socket auth only once
+      if (!socket.connected) {
+        socket.auth = { token: user.token };
+        socket.connect();
+        // console.log("Socket connected in App.jsx");
+      }
+
+      // Setup notification listener
       socket.on('newNotification', (notification) => {
-        useDispatch(addNotification(notification));
+        dispatch(addNotification(notification));
       });
     }
 
     return () => {
+      // Cleanup socket listeners but don't disconnect
       socket.off('newNotification');
     };
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   return (
     <>
       <Router>
+        {error && <AlertNotification message={error} type="error" />}
+        {successMessage && <AlertNotification message={successMessage} type="success" />}
         <Routes>
+
           <Route path="/" element={<Home />} />
 
           {/* Protected Routes Based on Role */}
@@ -59,15 +73,22 @@ function App() {
               )
             }
           />
-
-          {/* Auth Routes */}
-          <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
-
-          <Route path="/verify-OTP" element={<VerifyOTP />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/chats/:userId" element={<ChatPage />} />
+            {/* Auth Routes */}
+            <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
+            <Route path="/users/:id" element={<UserProfile />} />
+           
+            <Route path="/verify-OTP" element={<VerifyOTP />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Chat Routes - protected for authenticated users */}
+          {user && user.role === "user" ? (
+            <>
+              <Route path="/chats" element={<ChatPage />} />
+              <Route path="/chats/:userId" element={<ChatPage />} />
+            </>
+          ) : null}
 
           <Route
             path="/login"
@@ -75,6 +96,7 @@ function App() {
           />
 
           {/* Redirect unknown routes to Home */}
+
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

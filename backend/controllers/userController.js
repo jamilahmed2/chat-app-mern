@@ -2,39 +2,38 @@ import User from '../models/User.js';
 import Friend from '../models/Friend.js';
 import cloudinary from '../utils/cloudinary.js';
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs';
 import { generateOTP, transporter } from '../utils/emailUtils.js'
+import mongoose from 'mongoose';
 
 
-// Get all users
-// export const getAllUsersHome = async (req, res) => {
-//     try {
-//         const users = await User.find({}, { password: 0 }).select("blockedUsers"); // Exclude passwords
-//         if (!users.length) {
-//             return res.status(404).json({ message: "No users found" });
-//         }
-//         res.status(200).json({ totalUsers: users.length, users });
-//     } catch (error) {
-//         res.status(500).json({ message: "Server error: Unable to fetch users" });
-//     }
-// };
 export const getAllUsersHome = async (req, res) => {
     try {
-        const currentUserId = req.user?.id;
-        
+        const currentUserId = req.user?._id;
+        // console.log('Current User ID:', currentUserId);
+
         // If no user is logged in, return only public info
         if (!currentUserId) {
-            const users = await User.find({}, { password: 0, otp: 0, otpExpires: 0 });
+            const users = await User.find({ role: "user" }, { password: 0, otp: 0, otpExpires: 0, role: 0 });
             return res.status(200).json({
                 success: true,
                 users
             });
         }
-        
+
+
+        // Convert currentUserId to ObjectId to ensure proper comparison
+        const objectIdCurrentUser = new mongoose.Types.ObjectId(currentUserId);
+        // console.log('Current User ObjectId:', objectIdCurrentUser);
+
         // Get all users except current user
         const users = await User.find(
-            { _id: { $ne: currentUserId } },
+            { _id: { $ne: currentUserId }, role: "user" },
             { password: 0, otp: 0, otpExpires: 0 }
         );
+
+        // console.log('Found users count:', users.length);
+        // console.log('User IDs in response:', users.map(u => u._id.toString()));
 
         // Get all friendships for current user - get pending and accepted in one query
         const friendships = await Friend.find({
@@ -44,12 +43,20 @@ export const getAllUsersHome = async (req, res) => {
             ]
         });
 
+
         // Map users with friendship status - improved logic
         const usersWithStatus = users.map(user => {
-            const userObj = user.toJSON();
             
+            const userObj = user.toJSON();
+            // isReported flag based on current user's reports
+            if (currentUserId) {
+                userObj.isReported = user.reports &&
+                    user.reports.some(report => report.reportedBy.toString() === currentUserId);
+            } else {
+                userObj.isReported = false;
+            }
             // Find matching friendship
-            const friendship = friendships.find(f => 
+            const friendship = friendships.find(f =>
                 (f.requester.toString() === user._id.toString() || f.recipient.toString() === user._id.toString())
             );
 
@@ -62,18 +69,19 @@ export const getAllUsersHome = async (req, res) => {
                     isReceived: false
                 };
             }
-            
+
             const isFriend = friendship.status === 'accepted';
-            const isPending = friendship.status === 'pending' && 
-                              friendship.requester.toString() === currentUserId;
-            const isReceived = friendship.status === 'pending' && 
-                               friendship.recipient.toString() === currentUserId;
+            const isPending = friendship.status === 'pending' &&
+                friendship.requester.toString() === currentUserId;
+            const isReceived = friendship.status === 'pending' &&
+                friendship.recipient.toString() === currentUserId;
 
             return {
                 ...userObj,
                 isFriend,
                 isPending,
                 isReceived,
+                isReported,
                 friendshipId: friendship._id
             };
         });
@@ -83,13 +91,29 @@ export const getAllUsersHome = async (req, res) => {
             users: usersWithStatus
         });
     } catch (error) {
-        console.error('Error in getAllUsersHome:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: "Server error: Unable to fetch users" 
+        // console.error('Error in getAllUsersHome:', error);
+        res.status(500).json({
+            success: false,
+            message: "Server error: Unable to fetch users"
         });
     }
 };
+
+
+
+export const getUser = async (req, res) => {
+    const { id } = req.params;
+    if (id !== req.params.id) {
+        return res.status(400).json({ message: "Invalid user ID" });
+    }
+    try {
+        const post = await User.findById(id);
+
+        res.status(200).json(post);
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+}
 
 // Block a user
 export const blockUser = async (req, res) => {
@@ -181,6 +205,12 @@ export const updateUserEmail = async (req, res) => {
             // console.log("New email is the same as the current email");
             return res.status(400).json({ message: "New email is the same as current email" });
         }
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            console.log("Email is already in use by another user");
+            return res.status(400).json({ message: "Email is already in use" });
+        }
+
 
         const otp = generateOTP();
         // console.log("Generated OTP:", otp); // ✅ Check OTP generation
@@ -341,9 +371,9 @@ export const uploadUserProfileImage = async (req, res) => {
         user.profileImage = result.secure_url;
         await user.save();
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Profile image updated successfully',
-            profileImage: result.secure_url 
+            profileImage: result.secure_url
         });
     } catch (error) {
         console.error('Upload error:', error);

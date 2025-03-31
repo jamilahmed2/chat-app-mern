@@ -1,42 +1,107 @@
-import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { forgotPasswordAction } from "../reducers/authSlice";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { IoLogoOctocat, IoMenuOutline, IoCloseOutline } from "react-icons/io5";
+import AlertNotification from '../components/AlertNotification';
 
 const ForgotPassword = () => {
+    const [email, setEmail] = useState("");
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    
     const dispatch = useDispatch();
-    const { isLoading, error, passwordResetEmailSent } = useSelector((state) => state.auth);
-    const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
+    const { isLoading, error, passwordResetEmailSent } = useSelector((state) => state.auth);
 
-    const onSubmit = (data) => {
-        dispatch(forgotPasswordAction(data.email)).then((result) => {
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        dispatch(forgotPasswordAction(email)).then((result) => {
             if (result.meta.requestStatus === "fulfilled") {
-                navigate("/reset-password", { state: { email: data.email } });
+                navigate("/reset-password", { state: { email } });
             }
         });
     };
 
     return (
-        <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Forgot Password</h2>
-            {error && <p className="text-red-500">{error}</p>}
-            {passwordResetEmailSent && <p className="text-green-500">Email sent successfully!</p>}
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <input
-                    type="email"
-                    {...register("email", { required: true })}
-                    placeholder="Enter your email"
-                    className="w-full p-2 border rounded mb-3"
-                />
-                <button
-                    type="submit"
-                    className="bg-blue-500 text-white py-2 px-4 rounded w-full"
-                    disabled={isLoading}
-                >
-                    {isLoading ? "Sending..." : "Reset Password"}
-                </button>
-            </form>
+        <div className="home-container">
+            {error && <AlertNotification message={error} type="error" />}
+            {passwordResetEmailSent && <AlertNotification message="Email sent successfully!" type="success" />}
+            <div className="home-layout">
+                {/* Header/Navbar */}
+                <header className="home-header">
+                    <div className="header-container">
+                        <div className="header-logo">
+                            <IoLogoOctocat />
+                            <span>Social Chat</span>
+                        </div>
+                        
+                        {/* Hamburger Menu Button (Mobile Only) */}
+                        <button 
+                            className="hamburger-button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileMenuOpen(!mobileMenuOpen);
+                            }}
+                            aria-label="Toggle menu"
+                        >
+                            {mobileMenuOpen ? <IoCloseOutline /> : <IoMenuOutline />}
+                        </button>
+                        
+                        {/* Navigation - Desktop */}
+                        <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+                            <ul className="nav-list">
+                                <li className="nav-item">
+                                    <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Register</Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="home-content">
+                    <div className="content-container">
+                        <div className="forgot-password-container">
+                            <div className="forgot-password-wrapper">
+                                <h2 className="forgot-password-title">Forgot Password</h2>
+                                <p className="forgot-password-subtitle">Enter your email address to reset your password.</p>
+                                
+                                <form onSubmit={handleSubmit} className="forgot-password-form">
+                                    <div className="form-group">
+                                        <label htmlFor="email">Email Address</label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            placeholder="Enter your email" 
+                                            value={email} 
+                                            onChange={(e) => setEmail(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                    
+                                    <button 
+                                        type="submit" 
+                                        className="forgot-password-button"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? "Sending..." : "Reset Password"}
+                                    </button>
+                                </form>
+                                
+                                <div className="forgot-password-footer">
+                                    <p>Remember your password? <Link to="/login">Back to Login</Link></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
         </div>
     );
 };

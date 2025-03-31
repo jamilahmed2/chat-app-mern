@@ -1,21 +1,21 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser,setTempEmail  } from "../reducers/authSlice";
+import { registerUser, setTempEmail } from "../reducers/authSlice";
 import { Link, useNavigate } from "react-router-dom";
-
-
+import { IoLogoOctocat, IoMenuOutline, IoCloseOutline } from "react-icons/io5";
+import AlertNotification from '../components/AlertNotification';
 
 const Register = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [otpSent, setOtpSent] = useState(false); 
+    const [otpSent, setOtpSent] = useState(false);
     const [role, setRole] = useState("user");
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { user, loading, error } = useSelector((state) => state.auth);
-
+    const { user, isLoading, error, successMessage } = useSelector((state) => state.auth);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -27,7 +27,6 @@ const Register = () => {
             }
         });
     };
-    
 
     // Check if user is already logged in and redirect
     useEffect(() => {
@@ -38,64 +37,111 @@ const Register = () => {
                 navigate("/", { replace: true });  // Use replace to prevent looping
             }
         }
-    }, []);
-
-
-    
-
+    }, [navigate]);
     return (
-        <div style={styles.container}>
-            <form onSubmit={handleSubmit} style={styles.form}>
-                <h2 style={styles.title}>Register</h2>
-                {error && <p style={styles.error}>{error}</p>}
-                <input type="text" placeholder="Name" style={styles.input} value={name} onChange={(e) => setName(e.target.value)} required />
-                <input type="email" placeholder="Email" style={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <input type="password" placeholder="Password" style={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <Link to="/login" style={{ color:"white",}}>Already have an account? Login</Link>
-                <button style={styles.button} type="submit" disabled={loading}>
-                    {loading ? "Registering..." : "Register"}
-                </button>
-            </form>
+        <div className="home-container">
+            {error && <AlertNotification message={error} type="error" />}
+            {successMessage && <AlertNotification message={successMessage} type="success" />}
+            <div className="home-layout">
+                {/* Header/Navbar */}
+                <header className="home-header">
+                    <div className="header-container">
+                        <div className="header-logo">
+                            <IoLogoOctocat />
+                            <span>Social Chat</span>
+                        </div>
+
+                        {/* Hamburger Menu Button (Mobile Only) */}
+                        <button
+                            className="hamburger-button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileMenuOpen(!mobileMenuOpen);
+                            }}
+                            aria-label="Toggle menu"
+                        >
+                            {mobileMenuOpen ? <IoCloseOutline /> : <IoMenuOutline />}
+                        </button>
+
+                        {/* Navigation - Desktop */}
+                        <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+                            <ul className="nav-list">
+                                <li className="nav-item">
+                                    <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+                                </li>
+                                <li className="nav-item active">
+                                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Register</Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="home-content">
+                    <div className="content-container">
+                        <div className="register-form-container">
+                            <div className="register-form-wrapper">
+                                <h2 className="register-title">Create an Account</h2>
+                                <form onSubmit={handleSubmit} className="register-form">
+                                    <div className="form-group">
+                                        <label htmlFor="name">Full Name</label>
+                                        <input
+                                            type="text"
+                                            id="name"
+                                            placeholder="Enter your name"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="email">Email Address</label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            placeholder="Enter your email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="password">Password</label>
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            placeholder="Create a password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="register-button"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? "Creating Account..." : "Register"}
+                                    </button>
+                                </form>
+
+                                <div className="register-footer">
+                                    <p>Already have an account? <Link to="/login">Login</Link></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
         </div>
     );
-};
-
-const styles = {
-    container: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh'
-    },
-    form: {
-        backgroundColor: 'grey',
-        padding: '24px',
-        borderRadius: '4px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        width: '320px'
-    },
-    title: {
-        fontSize: '20px',
-        fontWeight: 'bold',
-        marginBottom: '16px'
-    },
-    error: {
-        color: 'red'
-    },
-    input: {
-        width: '100%',
-        padding: '8px',
-        marginBottom: '8px',
-        border: '1px solid #ccc'
-    },
-    button: {
-        width: '100%',
-        padding: '8px',
-        backgroundColor: '#3b82f6',
-        color: 'white',
-        border: 'none',
-        cursor: 'pointer'
-    }
 };
 
 export default Register;

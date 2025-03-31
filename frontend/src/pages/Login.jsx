@@ -2,54 +2,18 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../reducers/authSlice";
 import { Link, useNavigate } from "react-router-dom";
-
-// Add these styles in a separate CSS file or use inline styles
-const styles = {
-    container: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh'
-    },
-    form: {
-        backgroundColor: 'grey',
-        padding: '24px',
-        borderRadius: '4px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        width: '320px'
-    },
-    title: {
-        fontSize: '20px',
-        fontWeight: 'bold',
-        marginBottom: '16px'
-    },
-    error: {
-        color: 'red'
-    },
-    input: {
-        width: '100%',
-        padding: '8px',
-        marginBottom: '8px',
-        border: '1px solid #ddd'
-    },
-    button: {
-        width: '100%',
-        padding: '8px',
-        backgroundColor: '#3b82f6',
-        color: 'white',
-        border: 'none',
-        cursor: 'pointer'
-    }
-};
+import { IoLogoOctocat, IoMenuOutline, IoCloseOutline } from "react-icons/io5";
+import AlertNotification from '../components/AlertNotification';
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { user, loading, error } = useSelector((state) => state.auth);
+    const { user, loading, error, successMessage } = useSelector((state) => state.auth);
 
-   
     const handleSubmit = (e) => {
         e.preventDefault();
         dispatch(loginUser({ email, password })).then((res) => {
@@ -69,36 +33,101 @@ const Login = () => {
             }
         });
     };
-    
-    
 
     return (
-        <div style={styles.container}>
-            <form onSubmit={handleSubmit} style={styles.form}>
-                <h2 style={styles.title}>Login</h2>
-                {error && <p style={styles.error}>{error}</p>}
-                <input
-                    type="email"
-                    placeholder="Email"
-                    style={styles.input}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    style={styles.input}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <Link to="/forgot-password" style={{ marginBottom: '16px', display: 'block', color: 'white' }}>Forgot Password</Link>
-                <Link to="/register" style={{ marginBottom: '16px', display: 'block', color: 'white' }}>Don't have an account?</Link>
-                <button style={styles.button} type="submit" disabled={loading}>
-                    {loading ? "Logging in..." : "Login"}
-                </button>
-            </form>
+        <div className="home-container">
+            {error && <AlertNotification message={error} type="error" />}
+            {successMessage && <AlertNotification message={successMessage} type="success" />}
+            <div className="home-layout">
+                {/* Header/Navbar */}
+                <header className="home-header">
+                    <div className="header-container">
+                        <div className="header-logo">
+                            <IoLogoOctocat />
+                            <span>Social Chat</span>
+                        </div>
+                        
+                        {/* Hamburger Menu Button (Mobile Only) */}
+                        <button 
+                            className="hamburger-button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileMenuOpen(!mobileMenuOpen);
+                            }}
+                            aria-label="Toggle menu"
+                        >
+                            {mobileMenuOpen ? <IoCloseOutline /> : <IoMenuOutline />}
+                        </button>
+                        
+                        {/* Navigation - Desktop */}
+                        <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+                            <ul className="nav-list">
+                                <li className="nav-item">
+                                    <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Register</Link>
+                                </li>
+                                <li className="nav-item active">
+                                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="home-content">
+                    <div className="content-container">
+                        <div className="login-form-container">
+                            <div className="login-form-wrapper">
+                                <h2 className="login-title">Login to Your Account</h2>
+                                <form onSubmit={handleSubmit} className="login-form">
+                                    <div className="form-group">
+                                        <label htmlFor="email">Email Address</label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            placeholder="Enter your email" 
+                                            value={email} 
+                                            onChange={(e) => setEmail(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                    
+                                    <div className="form-group">
+                                        <label htmlFor="password">Password</label>
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            placeholder="Enter your password" 
+                                            value={password} 
+                                            onChange={(e) => setPassword(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                    
+                                    <div className="forgot-password">
+                                        <Link to="/forgot-password">Forgot Password?</Link>
+                                    </div>
+                                    
+                                    <button 
+                                        type="submit" 
+                                        className="login-button"
+                                        disabled={loading}
+                                    >
+                                        {loading ? "Logging in..." : "Login"}
+                                    </button>
+                                </form>
+                                
+                                <div className="login-footer">
+                                    <p>Don't have an account? <Link to="/register">Register</Link></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
         </div>
     );
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import socket from '../utils/socket';
-import { getUnreadCountsAction, markAsDeliveredAction, markMessageAsReadAction, updateMessageStatus } from '../reducers/chatSlice';
+import { getMessagesAction, getUnreadCountsAction, markAsDeliveredAction, markMessageAsReadAction, updateMessageStatus } from '../reducers/chatSlice';
 
 const useSocketChat = ({ user, activeChat, messages, dispatch }) => {
     const [typing, setTyping] = useState(false);

@@ -20,7 +20,7 @@ const upload = multer({
     }
 });
 router.get('/get-all-users',   getAllUsersHome);
-router.get('/get-user/:id', getUser);
+router.get('/get-user/:id', protect,getUser);
 router.put('/update-user-name', protect, updateUserName);
 router.put("/update-user-email", protect, updateUserEmail);
 router.post("/verify-user-email", protect, verifyEmailOTP);

@@ -127,21 +127,24 @@ const UserDashboard = () => {
     };
 
     const navigateToChat = () => {
-        navigate('/chats');
+        navigate('/chats', { replace: true });
+    };
+    const navigateToHome = () => {
+        navigate('/', { replace: true });
     };
 
     // Handle logout
-      const handleLogout = () => {
+    const handleLogout = () => {
         // Disconnect socket before logout
         if (socket && socket.connected) {
             socket.disconnect();
             console.log("Socket disconnected during logout");
         }
-        
-            dispatch(logoutUserAction()).then(() => {
-                navigate('/');
-            });
-        };
+
+        dispatch(logoutUserAction()).then(() => {
+            navigate('/', { replace: true });
+        });
+    };
 
     return (
         <div className="dashboard-container">
@@ -162,6 +165,11 @@ const UserDashboard = () => {
                                 <i className="ri-user-settings-line"></i> Profile Settings
                             </button>
                         </li>
+                        <li>
+                            <button onClick={navigateToHome}>
+                                <i className="ri-home-line"></i> Home
+                            </button>
+                        </li>
                         <li className={activeTab === "security" ? "active" : ""}>
                             <button onClick={() => setActiveTab("security")}>
                                 <i className="ri-lock-password-line"></i> Security
@@ -172,14 +180,15 @@ const UserDashboard = () => {
                                 <i className="ri-chat-3-line"></i> Chat
                             </button>
                         </li>
+
                         <li className="profile-dropdown-container">
-                            <button 
+                            <button
                                 className="profile-button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             >
-                                <img 
-                                    src={user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
-                                    alt="" 
+                                <img
+                                    src={user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
+                                    alt=""
                                 />
                             </button>
                             {isDropdownOpen && (
@@ -199,114 +208,114 @@ const UserDashboard = () => {
                             <div className="card-header">
                                 <h2>Profile Information</h2>
                                 <p>Update your personal information</p>
-                </div>
+                            </div>
 
                             <div className="profile-section">
                                 <div className="profile-info">
                                     <div className="profile-avatar">
-                    <img
-                                            src={preview || user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
-                                            alt="Profile" 
-                    />
+                                        <img
+                                            src={preview || user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
+                                            alt="Profile"
+                                        />
                                         <div className="upload-overlay">
                                             <label htmlFor="profile-upload">
                                                 <i className="ri-camera-line"></i>
                                             </label>
-                <input
-                                                id="profile-upload" 
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                                                style={{display: 'none'}}
+                                            <input
+                                                id="profile-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                style={{ display: 'none' }}
                                             />
                                         </div>
                                     </div>
-                                    
+
                                     {selectedFile && (
-                <button
-                    onClick={handleUpload}
+                                        <button
+                                            onClick={handleUpload}
                                             className="upload-button"
                                             disabled={loading}
                                         >
                                             {loading ? "Uploading..." : "Upload Image"}
                                         </button>
                                     )}
-                                    
+
                                     <div className="user-details">
                                         <h3>{user?.name}</h3>
                                         <p>{user?.email}</p>
                                     </div>
-            </div>
+                                </div>
 
                                 <div className="profile-forms">
                                     <form onSubmit={handleUpdateName} className="update-form">
                                         <div className="form-group">
                                             <label>Name</label>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                                            <input
+                                                type="text"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
                                                 placeholder="Update your name"
                                                 required
-                />
+                                            />
                                         </div>
-                <button type="submit" disabled={loading}>
-                    {loading ? "Updating..." : "Update Name"}
-                </button>
-            </form>
+                                        <button type="submit" disabled={loading}>
+                                            {loading ? "Updating..." : "Update Name"}
+                                        </button>
+                                    </form>
 
                                     <form onSubmit={handleUpdateEmail} className="update-form">
                                         <div className="form-group">
                                             <label>Email</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="Update your email"
                                                 required
-                />
+                                            />
                                         </div>
-                <button type="submit" disabled={loading}>
-                    {loading ? "Updating..." : "Update Email"}
-                </button>
-            </form>
+                                        <button type="submit" disabled={loading}>
+                                            {loading ? "Updating..." : "Update Email"}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
                     )}
-                    
+
                     {activeTab === "security" && (
                         <div className="content-card">
                             <div className="card-header">
                                 <h2>Security Settings</h2>
                                 <p>Update your password</p>
                             </div>
-                            
+
                             <form onSubmit={handlePasswordChange} className="password-form">
                                 <div className="form-group">
                                     <label>Current Password</label>
-                <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    <input
+                                        type="password"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
                                         placeholder="Enter current password"
-                    required
-                />
+                                        required
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label>New Password</label>
-                <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                                    <input
+                                        type="password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
                                         placeholder="Enter new password"
-                    required
-                />
+                                        required
+                                    />
                                 </div>
                                 <button type="submit" disabled={loading}>
                                     {loading ? "Updating..." : "Change Password"}
-                </button>
-            </form>
+                                </button>
+                            </form>
                         </div>
                     )}
                 </main>

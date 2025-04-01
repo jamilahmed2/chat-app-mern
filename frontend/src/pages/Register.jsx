@@ -42,44 +42,7 @@ const Register = () => {
         <div className="home-container">
             {error && <AlertNotification message={error} type="error" />}
             {successMessage && <AlertNotification message={successMessage} type="success" />}
-            <div className="home-layout">
-                {/* Header/Navbar */}
-                <header className="home-header">
-                    <div className="header-container">
-                        <div className="header-logo">
-                            <IoLogoOctocat />
-                            <span>Social Chat</span>
-                        </div>
-
-                        {/* Hamburger Menu Button (Mobile Only) */}
-                        <button
-                            className="hamburger-button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setMobileMenuOpen(!mobileMenuOpen);
-                            }}
-                            aria-label="Toggle menu"
-                        >
-                            {mobileMenuOpen ? <IoCloseOutline /> : <IoMenuOutline />}
-                        </button>
-
-                        {/* Navigation - Desktop */}
-                        <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-                            <ul className="nav-list">
-                                <li className="nav-item">
-                                    <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-                                </li>
-                                <li className="nav-item active">
-                                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Register</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </header>
-
+          
                 {/* Main Content */}
                 <main className="home-content">
                     <div className="content-container">
@@ -139,7 +102,7 @@ const Register = () => {
                         </div>
                     </div>
                 </main>
-            </div>
+            
         </div>
     );
 };

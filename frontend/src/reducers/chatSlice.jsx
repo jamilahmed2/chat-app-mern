@@ -38,7 +38,7 @@ const chatSlice = createSlice({
             if (messageIds && messageIds.length > 0) {
                 state.messages = state.messages.map(msg => {
                     if (messageIds.includes(msg._id)) {
-                        console.log(`Updating message ${msg._id} to status: ${status}`);
+                        // console.log(`Updating message ${msg._id} to status: ${status}`);
                         return { ...msg, status };
                     }
                     return msg;

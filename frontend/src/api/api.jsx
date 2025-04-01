@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.REACT_APP_SERVER_URL || "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_APP_API_URL + "/api",
+  timeout: 10000,
 });
 
 // Attach Authorization Token to Every Request

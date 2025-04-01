@@ -2,16 +2,15 @@ import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Chat from '../models/Chat.js';
-import Notification from '../models/Notification.js';
 
 const initializeSocketIO = (server) => {
     const io = new Server(server, {
         cors: {
-            origin: '*',
+            origin: process.env.FRONTEND_URL,
             methods: ['GET', 'POST']
         }
     });
-
+    
     // Store connected users
     const onlineUsers = new Map();
 

@@ -180,7 +180,7 @@ const AdminDashboard = () => {
         if (socket && socket.connected) {
             socket.disconnect();
         }
-        
+
         dispatch(logoutUserAction()).then(() => {
             navigate('/');
         });
@@ -193,12 +193,12 @@ const AdminDashboard = () => {
     };
 
     if (user?.role !== "admin") {
-    return (
+        return (
             <div className="dashboard-container">
                 <div className="dashboard-layout">
-                    <div className="content-card" style={{margin: "auto", textAlign: "center", padding: "50px"}}>
-                        <h1 style={{color: "var(--red-600)"}}>Access Denied! Admins Only</h1>
-                <button
+                    <div className="content-card" style={{ margin: "auto", textAlign: "center", padding: "50px" }}>
+                        <h1 style={{ color: "var(--red-600)" }}>Access Denied! Admins Only</h1>
+                        <button
                             onClick={() => navigate('/')}
                             style={{
                                 backgroundColor: "var(--emerald-500)",
@@ -211,7 +211,7 @@ const AdminDashboard = () => {
                             }}
                         >
                             Return to Home
-                </button>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -235,6 +235,11 @@ const AdminDashboard = () => {
                         <li className={activeTab === "users" ? "active" : ""}>
                             <button onClick={() => setActiveTab("users")}>
                                 <i className="ri-user-line"></i> User Management
+                            </button>
+                        </li>
+                        <li className="users">
+                            <button onClick={()=>navigate('/', { replace: true })}>
+                                <i className="ri-home-line"></i> Home
                             </button>
                         </li>
                         <li className={activeTab === "reported" ? "active" : ""}>
@@ -311,13 +316,13 @@ const AdminDashboard = () => {
                             </button>
                         </li>
                         <li className="profile-dropdown-container">
-                <button
+                            <button
                                 className="profile-button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             >
-                                <img 
-                                    src={user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
-                                    alt="" 
+                                <img
+                                    src={user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
+                                    alt=""
                                 />
                             </button>
                             {isDropdownOpen && (
@@ -336,14 +341,14 @@ const AdminDashboard = () => {
                     {activeTab === "users" && (
                         <div className="content-card">
                             <div className="card-header">
-                <h2>User Management</h2>
-                <p>Total Users: {totalUsers?.length || 0}</p>
+                                <h2>User Management</h2>
+                                <p>Total Users: {totalUsers?.length || 0}</p>
                             </div>
 
-                            <div style={{padding: "20px"}}>
-                {loading ? (
-                                    <div style={{textAlign: "center", padding: "20px"}}>
-                    <p>Loading users...</p>
+                            <div style={{ padding: "20px" }}>
+                                {loading ? (
+                                    <div style={{ textAlign: "center", padding: "20px" }}>
+                                        <p>Loading users...</p>
                                     </div>
                                 ) : (
                                     <div style={{
@@ -361,25 +366,25 @@ const AdminDashboard = () => {
                                                     backgroundColor: "var(--slate-200)",
                                                     textAlign: "left"
                                                 }}>
-                                                    <th style={{padding: "10px"}}>Name</th>
-                                                    <th style={{padding: "10px"}}>Email</th>
-                                                    <th style={{padding: "10px"}}>Role</th>
-                                                    <th style={{padding: "10px"}}>Actions</th>
+                                                    <th style={{ padding: "10px" }}>Name</th>
+                                                    <th style={{ padding: "10px" }}>Email</th>
+                                                    <th style={{ padding: "10px" }}>Role</th>
+                                                    <th style={{ padding: "10px" }}>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                        {Array.isArray(totalUsers) && totalUsers.length > 0 ? (
+                                                {Array.isArray(totalUsers) && totalUsers.length > 0 ? (
                                                     totalUsers.map((user) => (
                                                         <tr key={user._id} style={{
                                                             borderBottom: "1px solid var(--slate-200)"
                                                         }}>
-                                                            <td style={{padding: "10px"}}>{user.name}</td>
-                                                            <td style={{padding: "10px"}}>{user.email}</td>
-                                                            <td style={{padding: "10px"}}>{user.role}</td>
-                                                            <td style={{padding: "10px"}}>
-                                        {user.role !== "admin" && (
-                                                                    <button 
-                                                                        onClick={() => handleDeleteUser(user._id)} 
+                                                            <td style={{ padding: "10px" }}>{user.name}</td>
+                                                            <td style={{ padding: "10px" }}>{user.email}</td>
+                                                            <td style={{ padding: "10px" }}>{user.role}</td>
+                                                            <td style={{ padding: "10px" }}>
+                                                                {user.role !== "admin" && (
+                                                                    <button
+                                                                        onClick={() => handleDeleteUser(user._id)}
                                                                         style={{
                                                                             backgroundColor: "var(--red-500)",
                                                                             color: "white",
@@ -389,43 +394,43 @@ const AdminDashboard = () => {
                                                                             cursor: "pointer"
                                                                         }}
                                                                     >
-                                                Delete
-                                            </button>
-                                        )}
+                                                                        Delete
+                                                                    </button>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                     ))
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan="4" style={{padding: "20px", textAlign: "center"}}>
+                                                        <td colSpan="4" style={{ padding: "20px", textAlign: "center" }}>
                                                             No users found
                                                         </td>
                                                     </tr>
                                                 )}
                                             </tbody>
                                         </table>
-                    </div>
-                )}
-            </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
-                    
+
                     {/* Reported Users Tab */}
                     {activeTab === "reported" && (
                         <div className="content-card">
                             <div className="card-header">
                                 <h2>Reported Users</h2>
                                 <p>Users with reports: {reportedUsers?.length || 0}</p>
-            </div>
+                            </div>
 
-                            <div style={{padding: "20px"}}>
+                            <div style={{ padding: "20px" }}>
                                 {loading ? (
-                                    <div style={{textAlign: "center", padding: "20px"}}>
+                                    <div style={{ textAlign: "center", padding: "20px" }}>
                                         <p>Loading reported users...</p>
                                     </div>
                                 ) : (
-            <div>
-                {Array.isArray(reportedUsers) && reportedUsers.length > 0 ? (
+                                    <div>
+                                        {Array.isArray(reportedUsers) && reportedUsers.length > 0 ? (
                                             <div style={{
                                                 display: "grid",
                                                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
@@ -443,9 +448,9 @@ const AdminDashboard = () => {
                                                             alignItems: "center",
                                                             marginBottom: "10px"
                                                         }}>
-                                                            <img 
-                                                                src={user.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
-                                                                alt="" 
+                                                            <img
+                                                                src={user.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
+                                                                alt=""
                                                                 style={{
                                                                     width: "40px",
                                                                     height: "40px",
@@ -454,44 +459,44 @@ const AdminDashboard = () => {
                                                                 }}
                                                             />
                                                             <div>
-                                                                <h3 style={{margin: "0", fontSize: "16px"}}>{user.name}</h3>
-                                                                <p style={{margin: "0", fontSize: "14px", color: "var(--slate-500)"}}>{user.email}</p>
+                                                                <h3 style={{ margin: "0", fontSize: "16px" }}>{user.name}</h3>
+                                                                <p style={{ margin: "0", fontSize: "14px", color: "var(--slate-500)" }}>{user.email}</p>
                                                             </div>
                                                         </div>
-                                                        
+
                                                         <div style={{
                                                             backgroundColor: "var(--red-50)",
                                                             padding: "10px",
                                                             borderRadius: "6px",
                                                             marginBottom: "15px"
                                                         }}>
-                                                            <h4 style={{margin: "0 0 5px 0", fontSize: "14px", color: "var(--red-700)"}}>
+                                                            <h4 style={{ margin: "0 0 5px 0", fontSize: "14px", color: "var(--red-700)" }}>
                                                                 Reports: {user.reports.length}
                                                             </h4>
                                                             <div style={{
                                                                 maxHeight: "120px",
                                                                 overflowY: "auto"
                                                             }}>
-                            {user.reports.map((report, index) => (
+                                                                {user.reports.map((report, index) => (
                                                                     <div key={report._id || index} style={{
                                                                         padding: "8px",
                                                                         borderBottom: index < user.reports.length - 1 ? "1px solid var(--red-100)" : "none"
                                                                     }}>
-                                                                        <p style={{margin: "0 0 5px 0", fontSize: "13px", fontWeight: "500"}}>
+                                                                        <p style={{ margin: "0 0 5px 0", fontSize: "13px", fontWeight: "500" }}>
                                                                             Reason: {report.reason}
                                                                         </p>
                                                                     </div>
                                                                 ))}
                                                             </div>
                                                         </div>
-                                                        
+
                                                         <div style={{
                                                             display: "flex",
                                                             gap: "10px"
                                                         }}>
-                            <button
-                                onClick={() => handleBanUser(user._id)}
-                                disabled={bannedUsers.some(banned => banned._id === user._id)}
+                                                            <button
+                                                                onClick={() => handleBanUser(user._id)}
+                                                                disabled={bannedUsers.some(banned => banned._id === user._id)}
                                                                 style={{
                                                                     flex: "1",
                                                                     padding: "8px",
@@ -504,7 +509,7 @@ const AdminDashboard = () => {
                                                             >
                                                                 {bannedUsers.some(banned => banned._id === user._id) ? "Banned" : "Ban User"}
                                                             </button>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleClearReports(user._id)}
                                                                 style={{
                                                                     flex: "1",
@@ -516,7 +521,7 @@ const AdminDashboard = () => {
                                                                 }}
                                                             >
                                                                 Clear Reports
-                            </button>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -536,23 +541,23 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Banned Users Tab */}
                     {activeTab === "banned" && (
                         <div className="content-card">
                             <div className="card-header">
                                 <h2>Banned Users</h2>
                                 <p>Currently banned: {bannedUsers?.length || 0}</p>
-            </div>
+                            </div>
 
-                            <div style={{padding: "20px"}}>
+                            <div style={{ padding: "20px" }}>
                                 {loading ? (
-                                    <div style={{textAlign: "center", padding: "20px"}}>
+                                    <div style={{ textAlign: "center", padding: "20px" }}>
                                         <p>Loading banned users...</p>
                                     </div>
                                 ) : (
-            <div>
-                {bannedUsers.length > 0 ? (
+                                    <div>
+                                        {bannedUsers.length > 0 ? (
                                             <div style={{
                                                 display: "grid",
                                                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
@@ -570,9 +575,9 @@ const AdminDashboard = () => {
                                                             alignItems: "center",
                                                             marginBottom: "15px"
                                                         }}>
-                                                            <img 
-                                                                src={user.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
-                                                                alt="" 
+                                                            <img
+                                                                src={user.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
+                                                                alt=""
                                                                 style={{
                                                                     width: "40px",
                                                                     height: "40px",
@@ -581,12 +586,12 @@ const AdminDashboard = () => {
                                                                 }}
                                                             />
                                                             <div>
-                                                                <h3 style={{margin: "0", fontSize: "16px"}}>{user.name}</h3>
-                                                                <p style={{margin: "0", fontSize: "14px", color: "var(--slate-500)"}}>{user.email}</p>
+                                                                <h3 style={{ margin: "0", fontSize: "16px" }}>{user.name}</h3>
+                                                                <p style={{ margin: "0", fontSize: "14px", color: "var(--slate-500)" }}>{user.email}</p>
                                                             </div>
                                                         </div>
-                                                        
-                                                        <button 
+
+                                                        <button
                                                             onClick={() => handleUnbanUser(user._id)}
                                                             style={{
                                                                 width: "100%",
@@ -618,7 +623,7 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Blocked Users Tab */}
                     {activeTab === "blocked" && (
                         <div className="content-card">
@@ -627,9 +632,9 @@ const AdminDashboard = () => {
                                 <p>Showing who blocked who: {blockedUsersInfo?.length || 0}</p>
                             </div>
 
-                            <div style={{padding: "20px"}}>
+                            <div style={{ padding: "20px" }}>
                                 {loading ? (
-                                    <div style={{textAlign: "center", padding: "20px"}}>
+                                    <div style={{ textAlign: "center", padding: "20px" }}>
                                         <p>Loading blocked users...</p>
                                     </div>
                                 ) : (
@@ -648,7 +653,7 @@ const AdminDashboard = () => {
                                                                 <div key={userIndex} className="blocked-user-detail">
                                                                     <h4>{user.name}</h4>
                                                                     <p>Email: {user.email}</p>
-                                                                    <button 
+                                                                    <button
                                                                         className="unblock-btn"
                                                                         onClick={() => handleAdminUnblockUser(blockInfo.blocker.id, user._id)}
                                                                     >
@@ -675,7 +680,7 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Profile Settings Tab */}
                     {activeTab === "profile" && (
                         <div className="content-card">
@@ -683,30 +688,30 @@ const AdminDashboard = () => {
                                 <h2>Profile Information</h2>
                                 <p>Update your personal information</p>
                             </div>
-                            
+
                             <div className="profile-section">
                                 <div className="profile-info">
                                     <div className="profile-avatar">
-                                        <img 
-                                            src={preview || user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"} 
-                                            alt="Profile" 
+                                        <img
+                                            src={preview || user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
+                                            alt="Profile"
                                         />
                                         <div className="upload-overlay">
                                             <label htmlFor="profile-upload">
                                                 <i className="ri-camera-line"></i>
                                             </label>
-                                            <input 
-                                                id="profile-upload" 
-                                                type="file" 
-                                                accept="image/*" 
-                                                onChange={handleFileChange} 
-                                                style={{display: 'none'}}
+                                            <input
+                                                id="profile-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                style={{ display: 'none' }}
                                             />
                                         </div>
-            </div>
+                                    </div>
 
                                     {selectedFile && (
-                                        <button 
+                                        <button
                                             onClick={handleUpload}
                                             className="upload-button"
                                             disabled={loading}
@@ -714,50 +719,50 @@ const AdminDashboard = () => {
                                             {loading ? "Uploading..." : "Upload Image"}
                                         </button>
                                     )}
-                                    
+
                                     <div className="user-details">
                                         <h3>{user?.name}</h3>
                                         <p>{user?.email}</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="profile-forms">
                                     <form onSubmit={handleUpdateName} className="update-form">
                                         <div className="form-group">
                                             <label>Name</label>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                                            <input
+                                                type="text"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
                                                 placeholder="Update your name"
                                                 required
-                />
+                                            />
                                         </div>
-                <button type="submit" disabled={loading}>
-                    {loading ? "Updating..." : "Update Name"}
-                </button>
-            </form>
+                                        <button type="submit" disabled={loading}>
+                                            {loading ? "Updating..." : "Update Name"}
+                                        </button>
+                                    </form>
 
                                     <form onSubmit={handleUpdateEmail} className="update-form">
                                         <div className="form-group">
                                             <label>Email</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="Update your email"
                                                 required
-                />
+                                            />
                                         </div>
-                <button type="submit" disabled={loading}>
-                    {loading ? "Updating..." : "Update Email"}
-                </button>
-            </form>
+                                        <button type="submit" disabled={loading}>
+                                            {loading ? "Updating..." : "Update Email"}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Security Tab */}
                     {activeTab === "security" && (
                         <div className="content-card">
@@ -765,32 +770,32 @@ const AdminDashboard = () => {
                                 <h2>Security Settings</h2>
                                 <p>Update your password</p>
                             </div>
-                            
-                            <form onSubmit={handlePasswordChange} className="password-form" style={{padding: "20px"}}>
+
+                            <form onSubmit={handlePasswordChange} className="password-form" style={{ padding: "20px" }}>
                                 <div className="form-group">
                                     <label>Current Password</label>
-                <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    <input
+                                        type="password"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
                                         placeholder="Enter current password"
-                    required
-                />
+                                        required
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label>New Password</label>
-                <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                                    <input
+                                        type="password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
                                         placeholder="Enter new password"
-                    required
-                />
+                                        required
+                                    />
                                 </div>
                                 <button type="submit" disabled={loading}>
                                     {loading ? "Updating..." : "Change Password"}
-                </button>
-            </form>
+                                </button>
+                            </form>
                         </div>
                     )}
                 </main>

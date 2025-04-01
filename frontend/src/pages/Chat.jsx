@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import socket from "../utils/socket";
 import moment from "moment";
 import ScrollToBottom from "react-scroll-to-bottom";
 import EmojiPicker from 'emoji-picker-react';
 import { setActiveChat, addMessage, removeMessage, updateMessageStatus, resetUnreadCount, getMessagesAction, sendMessageAction, deleteMessageAction, getUnreadCountsAction, markAsDeliveredAction, markMessageAsReadAction, addReactionAction, removeReactionAction } from "../reducers/chatSlice";
-
+import { lazy, Suspense } from 'react';
 import { getFriendsAction, logoutUserAction } from "../reducers/authSlice";
 import { blockUserAction, unblockUserAction, reportUserAction } from "../actions/userActions";
 import Aside from "../components/Aside";
@@ -15,11 +14,13 @@ const ChatPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { userId } = useParams();
+
     const { messages, activeChat, unreadCounts } = useSelector((state) => state.chat);
     const { user, friends, totalUsers } = useSelector((state) => state.auth);
     const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [friendsList, setFriendsList] = useState([]);
     const [newMessage, setNewMessage] = useState("");
+    const EmojiPicker = lazy(() => import('emoji-picker-react'));
     const [showReactionPicker, setShowReactionPicker] = useState(false);
     const [reactionTarget, setReactionTarget] = useState(null);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -154,7 +155,6 @@ const ChatPage = () => {
                 // Clear media preview
                 setSelectedMedia(null);
                 setMediaPreview(null);
-
                 // Use socket functions from hook
                 emitReceiveMessage(result);
                 emitNewMessageNotification({
@@ -883,13 +883,15 @@ const ChatPage = () => {
                                                 <div className="emoji-picker-modal">
                                                     <div className="emoji-picker-backdrop" onClick={() => setShowReactionPicker(false)}></div>
                                                     <div className="emoji-picker-container">
-                                                        <EmojiPicker
-                                                            onEmojiClick={handleSelectEmoji}
-                                                            disableAutoFocus={true}
-                                                            searchPlaceholder="Search emoji..."
-                                                            width={300}
-                                                            height={400}
-                                                        />
+                                                        <Suspense fallback={<div>Loading...</div>}>
+                                                            <EmojiPicker
+                                                                onEmojiClick={handleSelectEmoji}
+                                                                disableAutoFocus={true}
+                                                                searchPlaceholder="Search emoji..."
+                                                                width={300}
+                                                                height={400}
+                                                            />
+                                                        </Suspense>
                                                     </div>
                                                 </div>
                                             )}

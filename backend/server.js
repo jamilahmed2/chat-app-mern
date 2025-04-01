@@ -30,7 +30,11 @@ const __dirname = path.dirname(__filename);
 const server = http.createServer(app);
 
 // Set up middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL, // Allow frontend origin
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 app.use(express.json());
 
 // Create uploads directory if it doesn't exist

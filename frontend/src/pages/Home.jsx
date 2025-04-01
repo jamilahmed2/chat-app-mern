@@ -103,7 +103,7 @@ const Home = () => {
     const filteredUsers = totalUsers?.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     const getFriendButtonText = (user) => {
         if (!user) return "Add Friend";
         if (user.isFriend) return "Remove Friend";
@@ -207,18 +207,18 @@ const Home = () => {
     const handleReportUser = (e) => {
         e.preventDefault();
         if (!reportReason.trim() || !userToReport) return;
-    
+
         dispatch(reportUserAction({
             userId: userToReport._id,
             reason: reportReason
         }))
-        .unwrap()
-        .then(() => {
-            closeReportModal();
-                    })
-        .catch(error => {
-            console.error("Failed to report user:", error);
-        });
+            .unwrap()
+            .then(() => {
+                closeReportModal();
+            })
+            .catch(error => {
+                console.error("Failed to report user:", error);
+            });
     };
 
     const handleLogout = () => {
@@ -247,238 +247,111 @@ const Home = () => {
                 </div>
             )}
 
-            <div className="home-layout">
-                {/* Header/Navbar */}
-                <header className="home-header">
-                    <div className="header-container">
-                        <div className="header-logo">
-                            <IoLogoOctocat />
-                            <span>Social Chat</span>
+            {/* Main Content */}
+            <main className="home-content">
+
+                <div className="content-container">
+                    <div className="user-search-section">
+                        <h2>Find People</h2>
+                        <div className="search-bar">
+                            <input
+                                type="text"
+                                placeholder="Search by name or email..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <button className="search-button">
+                                <IoSearchOutline />
+                            </button>
                         </div>
-
-                        {/* Hamburger Menu Button (Mobile Only) */}
-                        <button
-                            className="hamburger-button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setMobileMenuOpen(!mobileMenuOpen);
-                                // Close other dropdowns when opening mobile menu
-                                setIsDropdownOpen(false);
-                                setShowFriendRequests(false);
-                            }}
-                            aria-label="Toggle menu"
-                        >
-                            {mobileMenuOpen ? <IoCloseOutline /> : <IoMenuOutline />}
-                        </button>
-
-                        {/* Navigation - Desktop */}
-                        <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-                            <ul className="nav-list">
-                                <li className="nav-item active">
-                                    <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-                                </li>
-
-                                {isLoggedIn && user.role === "user" && (
-                                    <li className="nav-item">
-                                        <Link to="/chats" onClick={() => setMobileMenuOpen(false)}>Chats</Link>
-                                    </li>
-                                )}
-
-                                {user && (
-                                    <li className="nav-item">
-                                        <Link
-                                            to={user.role === "admin" ? "/dashboard" : "/user-dashboard"}
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        >
-                                            {user.role === "admin" ? "Admin Dashboard" : "Dashboard"}
-                                        </Link>
-                                    </li>
-                                )}
-
-                                {!isLoggedIn && (
-                                    <>
-                                        <li className="nav-item">
-                                            <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Register</Link>
-                                        </li>
-                                        <li className="nav-item">
-                                            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
-                                        </li>
-                                    </>
-                                )}
-
-                                {/* Show Logout in Mobile Menu */}
-                                {isLoggedIn && mobileMenuOpen && (
-                                    <li className="nav-item mobile-only">
-                                        <button
-                                            className="mobile-logout-button"
-                                            onClick={handleLogout}
-                                        >
-                                            <IoLogOutOutline /> Logout
-                                        </button>
-                                    </li>
-                                )}
-                            </ul>
-                        </nav>
-
-                        {/* User Profile Dropdown - Desktop */}
-                        {isLoggedIn && (
-                            <div className="user-controls">
-                                {/* Friend Requests Button */}
-                                <button
-                                    className="friend-requests-button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowFriendRequests(!showFriendRequests);
-                                        setIsDropdownOpen(false); // Close profile dropdown when opening friend requests
-                                    }}
-                                    aria-label="Friend Requests"
-                                >
-                                    <IoPeopleOutline />
-                                    {friendRequests.length > 0 && (
-                                        <span className="requests-badge">{friendRequests.length}</span>
-                                    )}
-                                </button>
-
-                                {/* Notifications Component */}
-                                <Notifications />
-
-                                <li className={`head-sidebar-profile ${isProfileDropdownOpen ? "active" : ""}`}>
-                                    <button
-                                        type="button"
-                                        className="head-sidebar-profile-btn"
-                                        onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                                    >
-                                        <img
-                                            src={user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
-                                            alt=""
-                                        />
-                                    </button>
-                                    {isProfileDropdownOpen && (
-                                        <ul className="head-sidebar-profile-dropdown">
-                                            <li>
-                                                <a onClick={() => navigate('/user-dashboard')}>
-                                                    <i className="ri-user-line"></i> Profile
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a onClick={handleLogout}>
-                                                    <i className="ri-logout-box-line"></i> Logout
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    )}
-                                </li>
-
-
-                            </div>
-                        )}
                     </div>
-                </header>
-                {/* Main Content */}
-                <main className="home-content">
 
-                    <div className="content-container">
-                        <div className="user-search-section">
-                            <h2>Find People</h2>
-                            <div className="search-bar">
-                                <input
-                                    type="text"
-                                    placeholder="Search by name or email..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                                <button className="search-button">
-                                    <IoSearchOutline />
-                                </button>
+                    <div className="users-grid-section">
+                        {loading ? (
+                            <div className="loading-container">
+                                <p>Loading users...</p>
                             </div>
-                        </div>
-
-                        <div className="users-grid-section">
-                            {loading ? (
-                                <div className="loading-container">
-                                    <p>Loading users...</p>
-                                </div>
-                            ) : (
-                                <div className="users-grid">
-                                    {Array.isArray(filteredUsers) && filteredUsers.length > 0 ? (
-                                        filteredUsers.map((otherUser) => (
-                                            <div key={otherUser._id} className="user-card">
-                                                <Link to={`/users/${otherUser._id}`}>
-                                                    <div className="user-card-header">
-                                                        <img
-                                                            src={otherUser.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
-                                                            alt={`${otherUser.name}'s profile`}
-                                                            className="user-avatar"
-                                                        />
-                                                        <div className="user-status">
-                                                            <span className={`status-indicator ${otherUser.status === 'online' ? 'online' : 'offline'}`}></span>
-                                                            <span className="status-text">{otherUser.status || 'offline'}</span>
-                                                        </div>
-                                                    </div></Link>
+                        ) : (
+                            <div className="users-grid">
+                                {Array.isArray(filteredUsers) && filteredUsers.length > 0 ? (
+                                    filteredUsers.map((otherUser) => (
+                                        <div key={otherUser._id} className="user-card">
+                                            <Link to={`/users/${otherUser._id}`}>
+                                                <div className="user-card-header">
+                                                    <img
+                                                        src={otherUser.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"}
+                                                        alt={`${otherUser.name}'s profile`}
+                                                        className="user-avatar"
+                                                    />
+                                                    <div className="user-status">
+                                                        <span className={`status-indicator ${otherUser.status === 'online' ? 'online' : 'offline'}`}></span>
+                                                        <span className="status-text">{otherUser.status || 'offline'}</span>
+                                                    </div>
+                                                </div>
 
                                                 <div className="user-card-body">
                                                     <h3 className="user-name">{otherUser.name}</h3>
-                                                    <p className="user-email">{otherUser.email}</p>
                                                     {isLoggedIn && isBlockedByUser(otherUser._id) && (
                                                         <p className="blocked-status">This user has blocked you</p>
                                                     )}
                                                 </div>
+                                            </Link>
 
-                                                {isLoggedIn && user && user._id !== otherUser._id && user.role === "user" && (
-                                                    <div className="user-card-actions">
-                                                        <button
-                                                            className={getFriendButtonClass(otherUser)}
-                                                            onClick={() => handleFriendAction(otherUser)}
-                                                            disabled={otherUser.isPending && !otherUser.isReceived}
-                                                        >
-                                                            {getFriendButtonText(otherUser)}
-                                                        </button>
+                                            {isLoggedIn && user && user._id !== otherUser._id && user.role === "user" && (
+                                                <div className="user-card-actions">
+                                                    <button
+                                                        className={getFriendButtonClass(otherUser)}
+                                                        onClick={() => handleFriendAction(otherUser)}
+                                                        disabled={otherUser.isPending && !otherUser.isReceived}
+                                                    >
+                                                        {getFriendButtonText(otherUser)}
+                                                    </button>
 
-                                                        {otherUser.isFriend && (
-                                                            <>
-                                                                <button
-                                                                    className="chat-button"
-                                                                    onClick={() => navigate(`/chats/${otherUser._id}`)}
-                                                                >
-                                                                    <IoChatboxOutline /> Chat
-                                                                </button>
+                                                    {otherUser.isFriend && (
+                                                        <>
+                                                            <button
+                                                                className="chat-button"
+                                                                onClick={() => navigate(`/chats/${otherUser._id}`)}
+                                                            >
+                                                                <IoChatboxOutline /> Chat
+                                                            </button>
 
-                                                                <button
-                                                                    className={`block-button ${isUserBlocked(otherUser._id) ? "unblock-button" : ""}`}
-                                                                    onClick={() => handleBlockUser(otherUser._id)}
-                                                                    disabled={isBlockedByUser(otherUser._id)}
-                                                                    title={isBlockedByUser(otherUser._id) ? "You cannot block a user who has blocked you" : ""}
-                                                                >
-                                                                    {isUserBlocked(otherUser._id) ? "Unblock" : "Block"}
-                                                                </button>
+                                                            <button
+                                                                className={`block-button ${isUserBlocked(otherUser._id) ? "unblock-button" : ""}`}
+                                                                onClick={() => handleBlockUser(otherUser._id)}
+                                                                disabled={isBlockedByUser(otherUser._id)}
+                                                                title={isBlockedByUser(otherUser._id) ? "You cannot block a user who has blocked you" : ""}
+                                                            >
+                                                                {isUserBlocked(otherUser._id) ? "Unblock" : "Block"}
+                                                            </button>
 
-                                                                {/* Report Button - only for friends */}
-                                                                <button
-                                                                    className={`report-button ${isUserReported(otherUser._id) ? "reported" : ""}`}
-                                                                    onClick={() => openReportModal(otherUser)}
-                                                                    disabled={isUserReported(otherUser._id)}
-                                                                    title={isUserReported(otherUser._id) ? "User reported" : "Report this user"}
-                                                                >
-                                                                    <IoFlagOutline />
-                                                                    {isUserReported(otherUser._id) ? "Reported" : "Report"}
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="no-results">
-                                            <p>No users found matching your search.</p>
+                                                            {/* Report Button - only for friends */}
+                                                            <button
+                                                                className={`report-button ${isUserReported(otherUser._id) ? "reported" : ""}`}
+                                                                onClick={() => openReportModal(otherUser)}
+                                                                disabled={isUserReported(otherUser._id)}
+                                                                title={isUserReported(otherUser._id) ? "User reported" : "Report this user"}
+                                                            >
+                                                                <IoFlagOutline />
+                                                                {isUserReported(otherUser._id) ? "Reported" : "Report"}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                                    ))
+                                ) : (
+                                    <div className="no-results">
+                                        <p>No users found matching your search.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-                </main>
-            </div>
+                </div>
+            </main>
+
 
             {/* Report Modal */}
             {reportModalOpen && (

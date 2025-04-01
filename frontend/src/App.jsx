@@ -1,107 +1,106 @@
-import './App.css'
-import { Routes, Route, Navigate, BrowserRouter as Router } from 'react-router-dom'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Register from './pages/Register'
-import Home from './pages/Home'
-import { useDispatch, useSelector } from 'react-redux'
-import UserDashboard from './pages/UserDashboard'
-import VerifyOTP from './pages/VerifyOTP'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import VerifyEmail from './pages/VerifyEmail'
-import socket from './utils/socket';
-import { useEffect } from 'react'
-import { addNotification } from './reducers/notificationSlice'
-import ChatPage from './pages/Chat'
-import AlertNotification from './components/AlertNotification'
-import UserProfile from './components/UserProfile'
-import ProtectedRoute from './components/ProtectedRoute'
-function App() {
-  const dispatch = useDispatch();
-  const { user, error, successMessage } = useSelector((state) => state.auth);
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Header from './components/Header';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import UserDashboard from './pages/UserDashboard';
+import ChatPage from './pages/Chat';
+import UserProfile from './components/UserProfile';
+import NotFound from './pages/NotFound';
+import VerifyOTP from './pages/VerifyOTP';
+import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import AlertNotification from './components/AlertNotification';
+import { useSelector } from 'react-redux';
 
-  useEffect(() => {
-    // Only setup socket for authenticated users
-    if (user && user.token) {
-      // Setup socket auth only once
-      if (!socket.connected) {
-        socket.auth = { token: user.token };
-        socket.connect();
-        // console.log("Socket connected in App.jsx");
-      }
+// Create a wrapper component to handle header visibility
+const HeaderWrapper = () => {
+  const location = useLocation();
+  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
 
-      // Setup notification listener
-      socket.on('newNotification', (notification) => {
-        dispatch(addNotification(notification));
-      });
-    }
+  // Define paths where header should be hidden
+  const noHeaderPaths = [
+    '/chats',
+    '/dashboard',
+    '/user-dashboard'
+  ];
 
-    return () => {
-      // Cleanup socket listeners but don't disconnect
-      socket.off('newNotification');
-    };
-  }, [dispatch, user]);
+  // Check if current path starts with any of the noHeaderPaths
+  const shouldHideHeader = noHeaderPaths.some(path =>
+    location.pathname.startsWith(path)
+  );
+
+  return shouldHideHeader ? null : <Header />;
+};
+
+const App = () => {
+  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+  const { error, successMessage } = useSelector((state) => state.auth);
 
   return (
     <>
       <Router>
-        {error && <AlertNotification message={error} type="error" />}
-        {successMessage && <AlertNotification message={successMessage} type="success" />}
-        <Routes>
+        <div className="home-container">
+          {error && <AlertNotification message={error} type="error" />}
+          {successMessage && <AlertNotification message={successMessage} type="success" />}
+          <div className="home-layout">
+            <HeaderWrapper />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/dashboard"
+                element={
+                  user ? (
+                    user.role === "admin" ? <Dashboard /> : <Navigate to="/" />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/user-dashboard"
+                element={
+                  user ? (
+                    user.role === "user" ? <UserDashboard /> : <Navigate to="/" />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
+              <Route path="/verify-OTP" element={<VerifyOTP />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
-          <Route path="/" element={<Home />} />
+              {user ? (
+                <>
+                  <Route path="/chats" element={<ChatPage />} />
+                  <Route path="/chats/:userId" element={<ChatPage />} />
+                  <Route path="/users/:id" element={<UserProfile />} />
+                </>
+              ) : null}
+              <Route
+                path="/users/:id"
+                element={user ? <UserProfile /> : <Navigate to="/" replace />}
+              />
 
-          {/* Protected Routes Based on Role */}
-          <Route
-            path="/dashboard"
-            element={
-              user ? (
-                user.role === "admin" ? <Dashboard /> : <Navigate to="/" />
-              ) : (
-                <Navigate to="/login" /> // Redirect if not logged in
-              )
-            }
-          />
-          <Route
-            path="/user-dashboard"
-            element={
-              user ? (
-                user.role === "user" ? <UserDashboard /> : <Navigate to="/" />
-              ) : (
-                <Navigate to="/login" /> // Redirect if not logged in
-              )
-            }
-          />
-            {/* Auth Routes */}
-            <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
-            <Route path="/users/:id" element={<UserProfile />} />
-           
-            <Route path="/verify-OTP" element={<VerifyOTP />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-          
-          {/* Chat Routes - protected for authenticated users */}
-          {user && user.role === "user" ? (
-            <>
-              <Route path="/chats" element={<ChatPage />} />
-              <Route path="/chats/:userId" element={<ChatPage />} />
-            </>
-          ) : null}
+              <Route
+                path="/login"
+                element={!user ? <Login /> : user.role === "admin" ? <Navigate to="/dashboard" /> : <Navigate to="/user-dashboard" />}
+              />
 
-          <Route
-            path="/login"
-            element={!user ? <Login /> : user.role === "admin" ? <Navigate to="/dashboard" /> : <Navigate to="/user-dashboard" />}
-          />
-
-          {/* Redirect unknown routes to Home */}
-
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </div>
       </Router>
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
+

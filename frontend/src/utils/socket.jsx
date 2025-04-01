@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_APP_SOCKET_URL;
+const SOCKET_URL = import.meta.env.VITE_APP_API_URL;
 
 // Create a function to get the token that will be used when connecting
 const getAuthToken = () => {

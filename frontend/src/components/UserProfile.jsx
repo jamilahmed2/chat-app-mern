@@ -20,7 +20,8 @@ const UserProfile = () => {
                 const result = await dispatch(getUserAction(id)).unwrap();
                 setUserDetails(result);
             } catch (err) {
-                setError(err.message || 'Failed to load user details');
+                // setError(err.message || 'Failed to load user details');
+                navigate('/', {replace: true})
             } finally {
                 setLoading(false);
             }
